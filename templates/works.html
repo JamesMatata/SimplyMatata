@@ -241,7 +241,7 @@
                 </div>
                 {% endwith %}
                 {% empty %}
-                {% include 'partials/works_empty_state.html' with full_width=True title="The archive is empty" subtitle="No published projects yet. When work goes live, it will show up here — software, film, comics, and everything in between." show_cta=True %}
+                {% include 'partials/works_empty_state.html' with full_width=True title="The archive is empty" %}
                 {% endfor %}
             </div>
 
@@ -250,7 +250,7 @@
                 x-cloak
                 class="mt-4"
             >
-                {% include 'partials/works_empty_state.html' with title="Nothing in this lane" subtitle="Try another filter, or browse the full archive to see everything at once." %}
+                {% include 'partials/works_empty_state.html' with title="Nothing in this lane" %}
             </div>
         </div>
     </section>
