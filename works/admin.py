@@ -1,12 +1,19 @@
 from django.contrib import admin
+from django.utils.html import format_html
 
+from .forms import ProjectAdminForm
 from .models import AnonymousComment, ComicPage, Project, ProjectMedia, SeriesEpisode
+
+admin.site.site_header = 'SimplyMatata'
+admin.site.site_title = 'SimplyMatata Admin'
+admin.site.index_title = 'Manage projects and content'
 
 
 class ProjectMediaInline(admin.TabularInline):
     model = ProjectMedia
     extra = 1
     fields = ('media_file', 'youtube_url', 'caption', 'sort_order')
+    ordering = ('sort_order', 'id')
 
     def get_queryset(self, request):
         return super().get_queryset(request).filter(episode__isnull=True)
@@ -18,6 +25,8 @@ class ComicPageInline(admin.TabularInline):
     fields = ('page_number', 'image')
     ordering = ('page_number',)
     fk_name = 'project'
+    verbose_name = 'Page'
+    verbose_name_plural = 'Comic pages'
 
 
 class SeriesEpisodeInline(admin.TabularInline):
@@ -26,6 +35,8 @@ class SeriesEpisodeInline(admin.TabularInline):
     fields = ('number', 'title', 'tagline', 'thumbnail', 'featured_image')
     ordering = ('number',)
     show_change_link = True
+    verbose_name = 'Episode'
+    verbose_name_plural = 'Episodes / issues / cuts'
 
 
 class EpisodeMediaInline(admin.TabularInline):
@@ -33,6 +44,8 @@ class EpisodeMediaInline(admin.TabularInline):
     extra = 1
     fields = ('media_file', 'youtube_url', 'caption', 'sort_order')
     fk_name = 'episode'
+    verbose_name = 'Media item'
+    verbose_name_plural = 'Episode media'
 
 
 class EpisodeComicPageInline(admin.TabularInline):
@@ -41,45 +54,153 @@ class EpisodeComicPageInline(admin.TabularInline):
     fields = ('page_number', 'image')
     ordering = ('page_number',)
     fk_name = 'episode'
+    verbose_name = 'Page'
+    verbose_name_plural = 'Issue pages'
 
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('title', 'category', 'format', 'is_published', 'created_at')
-    list_filter = ('category', 'format', 'is_published')
-    search_fields = ('title', 'tagline', 'slug')
-    prepopulated_fields = {'slug': ('title',)}
-    fields = (
+    form = ProjectAdminForm
+    list_display = (
         'title',
-        'slug',
         'category',
         'format',
-        'tagline',
-        'delivery_formats',
-        'thumbnail',
-        'featured_image',
-        'details',
         'is_published',
+        'media_summary',
+        'created_at',
     )
+    list_filter = ('category', 'format', 'is_published')
+    list_editable = ('is_published',)
+    search_fields = ('title', 'tagline', 'slug')
+    prepopulated_fields = {'slug': ('title',)}
+    readonly_fields = ('created_at', 'setup_guide')
+    ordering = ('-created_at',)
+    date_hierarchy = 'created_at'
+    save_on_top = True
+
+    @admin.display(description='Media')
+    def media_summary(self, obj):
+        if obj.is_series:
+            count = obj.episode_count
+            label = obj.episodes_plural_label
+            return f'{count} {label}' if count else 'No episodes yet'
+        if obj.is_comic:
+            pages = obj.comic_pages.count()
+            return f'{pages} page{"s" if pages != 1 else ""}' if pages else 'No pages yet'
+        if obj.has_featured_video:
+            return 'Video attached'
+        gallery = len(obj.gallery_media)
+        if gallery:
+            return f'Image + {gallery} gallery item{"s" if gallery != 1 else ""}'
+        return 'Image only'
+
+    def setup_guide(self, obj):
+        if not obj or not obj.pk:
+            return (
+                'Save the project first. Then add media below based on category and format.'
+            )
+
+        if obj.is_series:
+            return format_html(
+                '<strong>Series project.</strong> Add entries under <em>{}</em> below. '
+                'Each entry gets its own video or comic pages.',
+                obj.episodes_section_label,
+            )
+
+        if obj.is_film or obj.is_advertising:
+            return format_html(
+                '<strong>Single {}.</strong> Add one video file (or YouTube URL) under '
+                '<em>Film video &amp; gallery</em> below. The first video becomes the main '
+                'watch experience. Extra items appear in the gallery.',
+                'film' if obj.is_film else 'ad',
+            )
+
+        if obj.is_comic:
+            return (
+                'Single comic. Add pages under Comic pages below. '
+                'Page 1 is typically used as the cover.'
+            )
+
+        return (
+            'Add optional gallery media below. Software and lab projects use the '
+            'featured image as the hero.'
+        )
+
+    setup_guide.short_description = 'How to add media'
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = [
+            (None, {
+                'fields': (
+                    'title',
+                    'slug',
+                    'category',
+                    'tagline',
+                    'is_published',
+                    'created_at',
+                ),
+            }),
+        ]
+
+        show_format = obj is None or obj.supports_format
+        show_delivery = obj is None or obj.is_advertising
+
+        format_fields = []
+        if show_format:
+            format_fields.append('format')
+        if show_delivery:
+            format_fields.append('delivery_formats')
+
+        if format_fields:
+            fieldsets.append(('Format', {
+                'fields': tuple(format_fields),
+                'description': (
+                    'Film / advertising / comic only. '
+                    '<strong>Single</strong> = one film, ad, or comic — add video or pages on this screen. '
+                    '<strong>Series</strong> = multiple episodes, cuts, or issues — save first, then add entries below.'
+                ),
+            }))
+
+        fieldsets.extend([
+            ('Cover art', {
+                'fields': ('thumbnail', 'featured_image'),
+                'description': (
+                    'Featured image is required. Thumbnail is optional and used on cards; '
+                    'if empty, the featured image is used.'
+                ),
+            }),
+            ('Content', {
+                'fields': ('details',),
+                'classes': ('collapse',),
+            }),
+        ])
+
+        if obj:
+            fieldsets.insert(2, ('Media setup', {
+                'fields': ('setup_guide',),
+            }))
+
+        return fieldsets
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = list(super().get_readonly_fields(request, obj))
+        if not obj:
+            fields = [field for field in fields if field != 'setup_guide']
+        return fields
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
         if db_field.name == 'details':
             formfield.help_text = (
-                'JSON project content. Supported keys: '
-                'overview (markdown), highlights [{label, value}], '
-                'additional (markdown), tools [strings], '
-                'meta {year, role, client}, description (legacy overview fallback).'
+                'JSON content. Keys: overview, highlights [{label, value}], '
+                'additional, tools [strings], meta {year, role, client}.'
             )
         if db_field.name == 'delivery_formats':
-            formfield.help_text = (
-                'Advertising only. Comma-separated delivery formats, '
-                'e.g. YouTube, TV, Reels, Social.'
-            )
+            formfield.help_text = 'Comma-separated, e.g. YouTube, TV, Reels.'
         if db_field.name == 'format':
             formfield.help_text = (
-                'Single = one film, ad, or comic. Series = multiple episodes/issues/cuts '
-                'managed under Episodes below.'
+                'Single = one film or ad with video on this page. '
+                'Series = multiple episodes/cuts managed below.'
             )
         return formfield
 
@@ -90,10 +211,19 @@ class ProjectAdmin(admin.ModelAdmin):
         if obj.is_series:
             return [SeriesEpisodeInline]
 
-        if obj.category == Project.Category.COMIC:
+        if obj.is_comic:
             return [ComicPageInline]
 
         return [ProjectMediaInline]
+
+    def get_inline_instances(self, request, obj=None):
+        inline_instances = super().get_inline_instances(request, obj)
+        if obj and obj.is_video_story and obj.is_single:
+            for inline in inline_instances:
+                if isinstance(inline, ProjectMediaInline):
+                    inline.verbose_name = 'Video / gallery item'
+                    inline.verbose_name_plural = 'Film video & gallery'
+        return inline_instances
 
 
 @admin.register(SeriesEpisode)
@@ -101,22 +231,30 @@ class SeriesEpisodeAdmin(admin.ModelAdmin):
     list_display = ('project', 'number', 'title', 'episode_media_summary')
     list_filter = ('project__category', 'project')
     search_fields = ('title', 'tagline', 'project__title')
+    autocomplete_fields = ('project',)
     ordering = ('project', 'number')
-    fields = ('project', 'number', 'title', 'tagline', 'thumbnail', 'featured_image')
+    save_on_top = True
+    fieldsets = (
+        (None, {
+            'fields': ('project', 'number', 'title', 'tagline'),
+        }),
+        ('Cover art', {
+            'fields': ('thumbnail', 'featured_image'),
+        }),
+    )
 
     def get_inlines(self, request, obj):
         if obj and obj.project.is_comic:
             return [EpisodeComicPageInline]
         return [EpisodeMediaInline]
 
+    @admin.display(description='Media')
     def episode_media_summary(self, obj):
         if obj.project.is_comic:
             return f'{obj.comic_page_count} pages'
         if obj.has_featured_video:
             return 'Video'
-        return 'Image'
-
-    episode_media_summary.short_description = 'Media'
+        return 'Image only'
 
 
 @admin.register(ComicPage)
@@ -125,11 +263,31 @@ class ComicPageAdmin(admin.ModelAdmin):
     list_filter = ('project', 'episode__project')
     search_fields = ('project__title', 'episode__title')
     ordering = ('page_number',)
+    autocomplete_fields = ('project', 'episode')
 
+    @admin.display(description='Owner')
     def owner(self, obj):
         return obj.episode or obj.project
 
-    owner.short_description = 'Owner'
+
+@admin.register(ProjectMedia)
+class ProjectMediaAdmin(admin.ModelAdmin):
+    list_display = ('project', 'episode', 'media_type', 'caption', 'sort_order')
+    list_filter = ('project__category',)
+    search_fields = ('project__title', 'episode__title', 'caption')
+    ordering = ('project', 'sort_order', 'id')
+    autocomplete_fields = ('project', 'episode')
+    fields = ('project', 'episode', 'media_file', 'youtube_url', 'caption', 'sort_order')
+
+    @admin.display(description='Type')
+    def media_type(self, obj):
+        if obj.is_video:
+            return 'Video file'
+        if obj.youtube_url:
+            return 'YouTube'
+        if obj.is_image:
+            return 'Image'
+        return 'File'
 
 
 @admin.register(AnonymousComment)
@@ -138,11 +296,12 @@ class AnonymousCommentAdmin(admin.ModelAdmin):
     list_filter = ('project', 'created_at')
     search_fields = ('content', 'ip_address')
     readonly_fields = ('project', 'content', 'ip_address', 'user_agent', 'created_at')
+    ordering = ('-created_at',)
+    date_hierarchy = 'created_at'
 
+    @admin.display(description='Content')
     def content_preview(self, obj):
         return obj.content[:80] + ('…' if len(obj.content) > 80 else '')
-
-    content_preview.short_description = 'Content'
 
     def has_add_permission(self, request):
         return False
