@@ -350,17 +350,7 @@
         </article>
         {% endwith %}
         {% empty %}
-        <article class="work-card group">
-            <div class="work-card-frame aspect-[4/5] rounded-lg border border-white/10">
-                <div class="flex h-full w-full items-center justify-center text-white/30">
-                    <span class="text-sm uppercase tracking-widest">Coming Soon</span>
-                </div>
-            </div>
-            <div class="mt-6">
-                <p class="accent-yellow text-[11px] font-light uppercase tracking-[0.24em]">Category</p>
-                <h3 class="mt-3 text-2xl font-normal tracking-tight md:text-[1.75rem]">Project Title</h3>
-            </div>
-        </article>
+        {% include 'partials/works_empty_state.html' with full_width=True title="Nothing featured yet" subtitle="Selected works will appear here once they're published. The studio's busy — check back soon." show_cta=True %}
         {% endfor %}
     </div>
     </div>
