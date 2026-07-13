@@ -1,0 +1,120 @@
+{% load static seo_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% firstof meta_description site_description %}">
+    <title>{% firstof page_title site_name %}</title>
+
+    <link rel="icon" href="{% static 'images/simply-matata-logo.png' %}" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="{% static 'images/simply-matata-logo.png' %}">
+    <meta name="theme-color" content="#0f0f0f">
+    <meta name="author" content="{{ site_author }}">
+    <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
+    <link rel="canonical" href="{% block canonical_url %}{% absolute_uri request.path %}{% endblock %}">
+
+    <meta property="og:site_name" content="{{ site_name }}">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:type" content="{% firstof og_type 'website' %}">
+    <meta property="og:title" content="{% firstof page_title site_name %}">
+    <meta property="og:description" content="{% firstof meta_description site_description %}">
+    <meta property="og:url" content="{% block og_url %}{% absolute_uri request.path %}{% endblock %}">
+    <meta property="og:image" content="{% firstof seo_og_image site_default_og_image %}">
+    <meta property="og:image:alt" content="{% if og_image_alt %}{{ og_image_alt }}{% else %}{{ site_name }} logo{% endif %}">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% firstof page_title site_name %}">
+    <meta name="twitter:description" content="{% firstof meta_description site_description %}">
+    <meta name="twitter:image" content="{% firstof seo_og_image site_default_og_image %}">
+    <meta name="twitter:image:alt" content="{% if og_image_alt %}{{ og_image_alt }}{% else %}{{ site_name }} logo{% endif %}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Quicksand', 'sans-serif'],
+                    },
+                    colors: {
+                        surface: '#0f0f0f',
+                        accent: '#f5c518',
+                    },
+                },
+            },
+        };
+    </script>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+        body.immersive-modal-open header {
+            pointer-events: none;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        html { scroll-behavior: smooth; }
+        ::selection {
+            background: rgba(245, 197, 24, 0.35);
+            color: #ffffff;
+        }
+
+        /* Firefox */
+        html {
+            scrollbar-width: thin;
+            scrollbar-color: #000000 #0f0f0f;
+        }
+
+        /* Chrome, Safari, Edge */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f0f0f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #000000;
+            border-radius: 0;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #1a1a1a;
+        }
+        ::-webkit-scrollbar-corner {
+            background: #0f0f0f;
+        }
+    </style>
+
+    {% include 'partials/hero_bg_styles.html' %}
+
+    {% block structured_data %}{% endblock %}
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="flex min-h-screen flex-col font-sans antialiased text-white bg-surface {% block body_class %}{% endblock %}">
+    {% block page_bg %}{% endblock %}
+
+    {% include 'partials/navbar.html' %}
+
+    <main class="relative z-[1] flex-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% include 'partials/footer.html' %}
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

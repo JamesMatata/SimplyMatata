@@ -1,0 +1,59 @@
+{% if project.show_media_gallery %}
+<section class="mt-20 text-left">
+    <h2 class="text-[11px] font-light uppercase tracking-[0.24em] text-white/35">Project media</h2>
+    <p class="mt-2 max-w-2xl font-light text-white/55 text-sm">
+        Supporting visuals, demos, and process snapshots from the project.
+    </p>
+
+    <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:gap-7">
+        {% for item in project.gallery_media %}
+        <figure class="gallery-item group relative overflow-hidden rounded-lg border border-white/10 bg-black/20">
+            {% if item.youtube_url %}
+            <div class="aspect-video">
+                <iframe
+                    src="{{ item.youtube_embed_url }}"
+                    title="{{ item.caption|default:project.title }}"
+                    class="h-full w-full"
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen
+                ></iframe>
+            </div>
+            {% elif item.is_video %}
+            <video
+                class="aspect-video w-full object-cover"
+                controls
+                playsinline
+                preload="metadata"
+                {% if project.card_thumbnail %}poster="{{ project.card_thumbnail.url }}"{% endif %}
+            >
+                <source src="{{ item.media_file.url }}">
+            </video>
+            {% elif item.is_image %}
+            <div class="aspect-[4/3] overflow-hidden">
+                <img
+                    src="{{ item.media_file.url }}"
+                    alt="{{ item.caption|default:project.title }}"
+                    class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    loading="lazy"
+                    decoding="async"
+                >
+            </div>
+            {% else %}
+            <div class="flex aspect-video items-center justify-center px-6 text-sm font-light text-white/45">
+                <a href="{{ item.media_file.url }}" class="transition-colors hover:text-white" target="_blank" rel="noopener noreferrer">
+                    View file
+                </a>
+            </div>
+            {% endif %}
+
+            {% if item.caption %}
+            <figcaption class="gallery-item-caption pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent px-4 pb-4 pt-12 max-sm:opacity-100">
+                <p class="font-light leading-snug text-white/90 text-sm sm:text-base">{{ item.caption }}</p>
+            </figcaption>
+            {% endif %}
+        </figure>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}

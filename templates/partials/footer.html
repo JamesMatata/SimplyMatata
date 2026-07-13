@@ -1,0 +1,56 @@
+<footer class="relative z-[1] border-t border-white/5 bg-[#0f0f0f]">
+    <div class="px-6 py-12 md:px-10 md:py-16 lg:px-12">
+        <div class="flex flex-col gap-12 md:flex-row md:items-end md:justify-between md:gap-16">
+            <ul class="grid grid-cols-1 gap-1 sm:gap-2 md:grid-cols-2 md:gap-x-12 md:gap-y-1 lg:gap-x-16">
+                <li>
+                    <a
+                        href="{% url 'index' %}"
+                        class="block font-light leading-[0.9] tracking-tight transition-opacity duration-300 hover:opacity-60 text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl"
+                    >
+                        Home
+                    </a>
+                </li>
+                <li>
+                    <a
+                        href="{% url 'works' %}"
+                        class="block font-light leading-[0.9] tracking-tight transition-opacity duration-300 hover:opacity-60 text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl"
+                    >
+                        Works
+                    </a>
+                </li>
+                <li>
+                    <a
+                        href="{% url 'about' %}"
+                        class="block font-light leading-[0.9] tracking-tight transition-opacity duration-300 hover:opacity-60 text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl"
+                    >
+                        About
+                    </a>
+                </li>
+                <li>
+                    <a
+                        href="{% url 'contact' %}"
+                        class="block font-light leading-[0.9] tracking-tight transition-opacity duration-300 hover:opacity-60 text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl"
+                    >
+                        Contact
+                    </a>
+                </li>
+            </ul>
+
+            <div class="flex flex-col items-start gap-4 md:items-end md:gap-5">
+                {% include 'partials/social_icons.html' with extra_class='md:justify-end' %}
+                <a
+                    href="mailto:hello@simplymatata.com"
+                    class="font-light tracking-tight text-white/55 text-base transition-colors duration-300 hover:text-[#f5c518] md:text-lg"
+                >
+                    hello@simplymatata.com
+                </a>
+            </div>
+        </div>
+
+        <div class="mt-12 border-t border-white/5 pt-8 md:mt-14">
+            <p class="font-light text-white/35 text-sm md:text-base">
+                &copy; {% now "Y" %} SimplyMatata. All rights reserved.
+            </p>
+        </div>
+    </div>
+</footer>

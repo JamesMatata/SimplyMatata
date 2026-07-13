@@ -1,0 +1,15 @@
+<div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+    <p class="accent-yellow text-[11px] font-light uppercase tracking-[0.24em]">
+        {{ project.get_category_display }}
+    </p>
+    {% if project.format_badge %}
+    <p class="text-[10px] font-light uppercase tracking-[0.2em] text-white/35">
+        {{ project.format_badge }}
+    </p>
+    {% endif %}
+    {% for fmt in project.delivery_format_list %}
+    <p class="text-[10px] font-light uppercase tracking-[0.2em] text-white/35">
+        {{ fmt }}
+    </p>
+    {% endfor %}
+</div>

@@ -1,0 +1,59 @@
+<div
+    x-data="filmPlayer()"
+    @open-film.window="openFilm($event.detail)"
+    @keydown.escape.window="if (open) { closeFilm(); $event.stopImmediatePropagation(); }"
+>
+    <div
+        x-ref="stage"
+        x-show="open"
+        x-cloak
+        x-transition:enter="transition-opacity duration-300 ease-out"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition-opacity duration-200 ease-in"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="film-player-modal fixed inset-0 z-[45] bg-[#050505]"
+        x-effect="document.body.classList.toggle('immersive-modal-open', open)"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="title ? ('Watching ' + title) : 'Watching film'"
+    >
+        <div class="relative flex h-full flex-col pt-[5rem] sm:pt-[5.5rem] md:pt-[6.5rem]">
+            <div class="relative flex min-h-0 flex-1 items-center justify-center px-2 pb-24 pt-4 sm:px-6 sm:pb-28">
+                <video
+                    x-ref="video"
+                    x-show="src"
+                    :src="src"
+                    :poster="poster"
+                    class="max-h-full w-full max-w-6xl bg-black"
+                    controls
+                    playsinline
+                    preload="metadata"
+                ></video>
+            </div>
+
+            <footer class="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-wrap items-center justify-center gap-3 px-6 pb-6 sm:pb-8">
+                <button
+                    type="button"
+                    @click="toggleFullscreen()"
+                    aria-label="Rotate and enter fullscreen"
+                    class="comic-close-btn pointer-events-auto"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mr-2 h-4 w-4" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M20.25 20.25v-4.5m0 4.5h-4.5m4.5 0L15 15M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75v4.5m0-4.5h-4.5m4.5 0L15 9"/>
+                    </svg>
+                    <span x-text="isFullscreen ? 'Exit fullscreen' : 'Rotate / fullscreen'"></span>
+                </button>
+                <button
+                    type="button"
+                    @click="closeFilm()"
+                    aria-label="Close player"
+                    class="comic-close-btn pointer-events-auto"
+                >
+                    Close
+                </button>
+            </footer>
+        </div>
+    </div>
+</div>

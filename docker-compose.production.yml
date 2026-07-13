@@ -1,0 +1,28 @@
+services:
+  web:
+    container_name: simplymatata_web
+    restart: always
+    ports: !override []
+
+  db:
+    container_name: simplymatata_db
+    restart: always
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: simplymatata_nginx
+    restart: always
+    ports:
+      - "8081:80"
+    volumes:
+      - ./nginx/app.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./data/media:/media:ro
+    depends_on:
+      web:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pidof nginx >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

@@ -1,0 +1,35 @@
+{% load project_extras %}
+
+{% if project.has_about_content %}
+<section class="mt-16 max-w-3xl text-left">
+    <h2 class="text-[11px] font-light uppercase tracking-[0.24em] text-white/35">About the work</h2>
+
+    {% if project.overview %}
+    <div class="project-markdown mt-6 space-y-4 text-base md:text-lg">
+        {{ project.overview|project_markdown }}
+    </div>
+    {% endif %}
+
+    {% if project.highlights %}
+    <dl class="mt-10 space-y-8 border-t border-white/10 pt-10">
+        {% for item in project.highlights %}
+        <div>
+            <dt class="text-[11px] font-light uppercase tracking-[0.24em] text-[#f5c518]">{{ item.label }}</dt>
+            <dd class="project-markdown mt-3 text-base md:text-lg">
+                {{ item.value|project_markdown }}
+            </dd>
+        </div>
+        {% endfor %}
+    </dl>
+    {% endif %}
+
+    {% if project.additional_notes %}
+    <div class="mt-10 border-t border-white/10 pt-10">
+        <h3 class="text-[11px] font-light uppercase tracking-[0.24em] text-white/35">Additional notes</h3>
+        <div class="project-markdown mt-4 space-y-4 text-base md:text-lg">
+            {{ project.additional_notes|project_markdown }}
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endif %}

@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body_class %}home-hero-light{% endblock %}
+
+{% block extra_head %}
+<style>
+    .accent-yellow {
+        color: #f5c518;
+    }
+    .about-hero {
+        min-height: 30vh;
+        min-height: 30svh;
+    }
+    @media (min-width: 640px) {
+        .about-hero {
+            min-height: 34vh;
+            min-height: 34svh;
+        }
+    }
+    @media (min-width: 768px) {
+        .about-hero {
+            min-height: 40vh;
+            min-height: 40svh;
+        }
+    }
+    @media (min-width: 1024px) {
+        .about-hero {
+            min-height: 46vh;
+            min-height: 46svh;
+        }
+    }
+    .page-surface {
+        background-color: #0f0f0f;
+    }
+    body.home-hero-light header nav .nav-logo {
+        filter: invert(1);
+        transition: filter 0.3s ease;
+    }
+    body.home-hero-light header nav .nav-line {
+        background-color: #1a1a1a;
+        transition: background-color 0.3s ease;
+    }
+    body.home-hero-light header nav .nav-line-open {
+        background-color: #ffffff;
+    }
+    .topic-pill {
+        border-color: rgba(255, 255, 255, 0.14);
+        color: rgba(255, 255, 255, 0.42);
+    }
+    .about-link {
+        transition: color 0.3s ease, opacity 0.3s ease;
+    }
+    .about-link:hover {
+        color: #f5c518;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div>
+    <section class="about-hero relative overflow-hidden">
+        <div class="absolute inset-0 z-0" aria-hidden="true">
+            <div class="hero-mesh absolute inset-0"></div>
+            <div class="hero-pattern absolute inset-0"></div>
+            <div class="hero-vignette absolute inset-0"></div>
+        </div>
+
+        <div class="relative z-10 mx-auto flex h-full min-h-[inherit] max-w-6xl items-end justify-between gap-6 px-5 pb-8 pt-24 sm:items-center sm:px-6 sm:pb-10 sm:pt-28 md:px-10 md:pt-28 md:pb-14">
+            <h1 class="font-light lowercase tracking-tight text-neutral-900 text-[3.25rem] leading-none sm:text-6xl sm:leading-tight md:text-8xl lg:text-9xl">
+                about
+            </h1>
+            <a
+                href="#about-main"
+                aria-label="Scroll to about details"
+                class="flex h-12 w-12 items-center justify-center text-neutral-900 transition-opacity duration-300 hover:opacity-50 md:h-14 md:w-14"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-8 w-8 md:h-10 md:w-10" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3"/>
+                </svg>
+            </a>
+        </div>
+    </section>
+
+    <div id="about-main" class="hero-scroll-target" aria-hidden="true"></div>
+
+    <section class="page-surface border-t border-white/5 px-5 py-12 sm:px-6 sm:py-16 md:px-10 md:py-24">
+        <div class="mx-auto max-w-6xl">
+            <div class="max-w-3xl lg:max-w-4xl">
+                <p class="text-[10px] font-light uppercase tracking-[0.28em] accent-yellow sm:text-[11px]">
+                    Who I am
+                </p>
+                <h2 class="mt-4 font-light leading-[1.08] tracking-tight text-[2rem] sm:mt-5 sm:text-4xl sm:leading-[1.05] md:text-5xl lg:text-6xl xl:text-7xl">
+                    Systems thinker. <span class="accent-yellow">Story director.</span>
+                </h2>
+                <p class="mt-6 font-light leading-relaxed text-white/65 text-[15px] sm:mt-8 sm:text-base md:text-lg lg:text-xl">
+                    I'm James Matata — a builder and creative director working at the intersection of software engineering and cinematic narrative. I design scalable architectures by day and craft AI-driven visual stories by night.
+                </p>
+                <p class="mt-4 font-light leading-relaxed text-white/65 text-[15px] sm:mt-6 sm:text-base md:text-lg lg:text-xl">
+                    This portfolio is a living archive of that dual practice: production-grade systems, experimental film, comics, and lab projects that probe what's possible when code meets culture.
+                </p>
+            </div>
+
+            <ul class="mt-8 flex flex-wrap gap-2 sm:mt-10 sm:gap-2.5">
+                <li class="topic-pill rounded-full border px-4 py-1.5 text-[10px] font-light uppercase tracking-[0.2em]">
+                    Software
+                </li>
+                <li class="topic-pill rounded-full border px-4 py-1.5 text-[10px] font-light uppercase tracking-[0.2em]">
+                    Film
+                </li>
+                <li class="topic-pill rounded-full border px-4 py-1.5 text-[10px] font-light uppercase tracking-[0.2em]">
+                    Comics
+                </li>
+                <li class="topic-pill rounded-full border px-4 py-1.5 text-[10px] font-light uppercase tracking-[0.2em]">
+                    Lab
+                </li>
+            </ul>
+
+            <div class="mt-8 grid grid-cols-1 gap-4 sm:mt-10 sm:gap-6 md:grid-cols-3">
+                <div class="rounded-lg border border-white/10 bg-black/20 px-5 py-6 sm:px-7 sm:py-8">
+                    <p class="text-[10px] font-light uppercase tracking-[0.28em] accent-yellow sm:text-[11px]">
+                        Focus
+                    </p>
+                    <p class="mt-3 font-light leading-relaxed text-white/75 text-[15px] sm:mt-4 sm:text-base">
+                        Software architecture, creative technology, and narrative design.
+                    </p>
+                </div>
+
+                <div class="rounded-lg border border-white/10 bg-black/20 px-5 py-6 sm:px-7 sm:py-8">
+                    <p class="text-[10px] font-light uppercase tracking-[0.28em] accent-yellow sm:text-[11px]">
+                        Approach
+                    </p>
+                    <p class="mt-3 font-light leading-relaxed text-white/75 text-[15px] sm:mt-4 sm:text-base">
+                        Minimal surfaces, massive ideas. Precision engineering with cinematic intent.
+                    </p>
+                </div>
+
+                <div class="rounded-lg border border-white/10 bg-black/20 px-5 py-6 sm:px-7 sm:py-8">
+                    <p class="text-[10px] font-light uppercase tracking-[0.28em] accent-yellow sm:text-[11px]">
+                        Based in
+                    </p>
+                    <p class="mt-3 font-light leading-relaxed text-white/75 text-[15px] sm:mt-4 sm:text-base">
+                        Building globally — remote-first, detail-obsessed.
+                    </p>
+                </div>
+            </div>
+
+            <p class="mt-8 text-[15px] font-light text-white/50 sm:mt-10 sm:text-base">
+                Want to collaborate?
+                <a href="{% url 'contact' %}" class="about-link text-white/75 underline decoration-white/20 underline-offset-4">
+                    Get in touch
+                </a>
+            </p>
+        </div>
+    </section>
+
+    <section class="page-surface px-5 pb-16 sm:px-6 sm:pb-24 md:px-10 md:pb-32">
+        <div class="mx-auto max-w-6xl">
+            <a
+                href="{% url 'works' %}"
+                class="group flex min-h-[24vh] items-center justify-center rounded-lg border border-white/10 bg-black/20 px-5 py-12 text-center transition-all duration-500 hover:border-[#f5c518] hover:bg-[#f5c518] sm:min-h-[28vh] sm:px-8 sm:py-16 md:min-h-[38vh]"
+            >
+                <span class="font-light leading-tight tracking-tight text-[1.65rem] transition-colors duration-500 sm:text-3xl md:text-5xl lg:text-6xl group-hover:text-black">
+                    Explore the work
+                    <span class="inline-block transition-transform duration-500 group-hover:translate-x-3">&rarr;</span>
+                </span>
+            </a>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var banner = document.querySelector('.about-hero');
+    if (!banner) return;
+
+    var onScroll = function () {
+        document.body.classList.toggle('home-hero-light', window.scrollY < banner.offsetHeight * 0.9);
+    };
+
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+});
+</script>
+{% endblock %}

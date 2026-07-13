@@ -1,0 +1,36 @@
+upstream simplymatata_app {
+    server 127.0.0.1:8000;
+}
+
+server {
+    listen 80;
+    server_name simplymatata.com www.simplymatata.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name simplymatata.com www.simplymatata.com;
+
+    client_max_body_size 25M;
+
+    ssl_certificate /etc/letsencrypt/live/simplymatata.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/simplymatata.com/privkey.pem;
+
+    location /media/ {
+        alias /opt/simplymatata/data/media/;
+        expires 30d;
+        add_header Cache-Control "public";
+        access_log off;
+    }
+
+    location / {
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_redirect off;
+        proxy_read_timeout 120s;
+        proxy_pass http://simplymatata_app;
+    }
+}

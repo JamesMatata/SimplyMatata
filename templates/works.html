@@ -1,0 +1,382 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body_class %}home-hero-light{% endblock %}
+
+{% block extra_head %}
+<style>
+    .accent-yellow {
+        color: #f5c518;
+    }
+    .works-hero {
+        min-height: 32vh;
+        min-height: 32svh;
+    }
+    @media (min-width: 640px) {
+        .works-hero {
+            min-height: 36vh;
+            min-height: 36svh;
+        }
+    }
+    @media (min-width: 768px) {
+        .works-hero {
+            min-height: 40vh;
+            min-height: 40svh;
+        }
+    }
+    @media (min-width: 1024px) {
+        .works-hero {
+            min-height: 46vh;
+            min-height: 46svh;
+        }
+    }
+    .filter-pill {
+        transition: border-color 0.3s ease, color 0.3s ease, background-color 0.3s ease;
+    }
+    .filter-pill.is-active {
+        border-color: rgba(255, 255, 255, 0.95);
+        color: #ffffff;
+    }
+    .filter-pill:not(.is-active) {
+        border-color: rgba(255, 255, 255, 0.18);
+        color: rgba(255, 255, 255, 0.38);
+    }
+    .filter-pill:not(.is-active):hover {
+        border-color: rgba(255, 255, 255, 0.35);
+        color: rgba(255, 255, 255, 0.62);
+    }
+    .work-card {
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .work-card-frame {
+        position: relative;
+        overflow: hidden;
+        background: #111111;
+    }
+    .work-card-poster,
+    .work-card-video {
+        transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease;
+    }
+    .work-card-frame.is-hovering.is-image-only .work-card-poster {
+        transform: scale(1.04);
+    }
+    .work-card-frame.is-playing .work-card-poster {
+        opacity: 0;
+    }
+    .work-card-shade {
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.08) 42%, transparent 100%);
+        opacity: 0.75;
+        transition: opacity 0.4s ease;
+    }
+    .work-card:hover .work-card-shade,
+    .work-card-frame.is-playing .work-card-shade {
+        opacity: 1;
+    }
+    .work-card-control {
+        opacity: 0;
+        transform: translateY(8px);
+        transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+    @media (hover: none), (pointer: coarse) {
+        .work-card-control {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .work-card:hover .work-card-control,
+    .work-card-frame.is-playing .work-card-control,
+    .work-card-frame.is-pinned .work-card-control {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .page-surface {
+        background-color: #0f0f0f;
+    }
+    body.home-hero-light header nav .nav-logo {
+        filter: invert(1);
+        transition: filter 0.3s ease;
+    }
+    body.home-hero-light header nav .nav-line {
+        background-color: #1a1a1a;
+        transition: background-color 0.3s ease;
+    }
+    .works-grid {
+        transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .works-grid.is-filtering {
+        opacity: 0;
+        transform: translateY(8px);
+        pointer-events: none;
+    }
+    .works-grid > div.is-hidden {
+        display: none;
+    }
+    body.home-hero-light header nav .nav-line-open {
+        background-color: #ffffff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div x-data="worksArchive()" x-init="init()">
+    <section class="works-hero relative overflow-hidden">
+        <div class="absolute inset-0 z-0" aria-hidden="true">
+            <div class="hero-mesh absolute inset-0"></div>
+            <div class="hero-pattern absolute inset-0"></div>
+            <div class="hero-vignette absolute inset-0"></div>
+        </div>
+
+        <div class="relative z-10 mx-auto flex h-full min-h-[inherit] max-w-6xl items-center justify-between px-5 pb-8 pt-24 sm:px-6 sm:pb-10 md:px-10 md:pt-28 md:pb-14">
+            <h1 class="font-light lowercase tracking-tight text-neutral-900 text-6xl sm:text-7xl md:text-8xl lg:text-9xl">
+                work
+            </h1>
+            <a
+                href="#works-main"
+                aria-label="Scroll to projects"
+                class="flex h-12 w-12 items-center justify-center text-neutral-900 transition-opacity duration-300 hover:opacity-50 md:h-14 md:w-14"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-8 w-8 md:h-10 md:w-10" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3"/>
+                </svg>
+            </a>
+        </div>
+    </section>
+
+    <div id="works-main" class="hero-scroll-target" aria-hidden="true"></div>
+
+    <div class="page-surface border-t border-white/5 px-6 py-5 md:px-10 md:py-6">
+        <div class="mx-auto flex max-w-6xl flex-wrap gap-3">
+            <button
+                type="button"
+                @click="setTrack('all')"
+                class="filter-pill rounded-full border px-5 py-2 text-[11px] font-light uppercase tracking-[0.22em]"
+                :class="{ 'is-active': track === 'all' }"
+            >
+                All ({{ total_count }})
+            </button>
+            <button
+                type="button"
+                @click="setTrack('software')"
+                class="filter-pill rounded-full border px-5 py-2 text-[11px] font-light uppercase tracking-[0.22em]"
+                :class="{ 'is-active': track === 'software' }"
+            >
+                Software ({{ software_count }})
+            </button>
+            <button
+                type="button"
+                @click="setTrack('storytelling')"
+                class="filter-pill rounded-full border px-5 py-2 text-[11px] font-light uppercase tracking-[0.22em]"
+                :class="{ 'is-active': track === 'storytelling' }"
+            >
+                Storytelling ({{ storytelling_count }})
+            </button>
+        </div>
+    </div>
+
+    <section id="works-grid" class="page-surface px-6 pb-24 md:px-10 md:pb-32">
+        <div class="mx-auto max-w-6xl">
+            <div
+                class="works-grid grid grid-cols-1 gap-y-10 gap-x-6 md:grid-cols-2 md:gap-x-8 md:gap-y-12 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-12"
+                :class="{ 'is-filtering': filtering }"
+            >
+                {% for project in projects %}
+                {% with video_media=project.featured_video %}
+                <div :class="{ 'is-hidden': !isVisible('{{ project.track }}') }">
+                <article
+                    x-data="workCard({{ project.has_featured_video|yesno:'true,false' }})"
+                    class="work-card group"
+                >
+                    <a href="{% url 'project_detail' project.slug %}" class="block">
+                        <div
+                            class="work-card-frame aspect-[4/5] rounded-lg border border-white/10 {% if video_media %}has-video{% else %}is-image-only{% endif %}"
+                            :class="{ 'is-hovering': hovering, 'is-playing': playing, 'is-pinned': pinned }"
+                            @mouseenter="onEnter()"
+                            @mouseleave="onLeave()"
+                        >
+                            <img
+                                src="{{ project.card_thumbnail.url }}"
+                                alt="{{ project.title }}"
+                                class="work-card-poster absolute inset-0 h-full w-full object-cover"
+                            >
+
+                            {% if video_media %}
+                            <video
+                                x-ref="video"
+                                class="work-card-video absolute inset-0 h-full w-full object-cover opacity-0"
+                                :class="{ 'opacity-100': playing }"
+                                src="{{ video_media.media_file.url }}"
+                                muted
+                                loop
+                                playsinline
+                                preload="metadata"
+                                @play="playing = true"
+                                @pause="playing = false"
+                            ></video>
+                            <button
+                                type="button"
+                                @click.prevent.stop="togglePin()"
+                                :aria-label="pinned ? 'Pause video' : 'Play video'"
+                                class="work-card-control absolute bottom-4 left-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/60 px-4 py-2 text-[11px] font-light uppercase tracking-[0.22em] text-white backdrop-blur-md hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black"
+                            >
+                                <span x-text="pinned ? 'Pause' : 'Play'"></span>
+                            </button>
+                            {% endif %}
+
+                            <div class="work-card-shade pointer-events-none absolute inset-0"></div>
+                        </div>
+
+                        <div class="mt-4">
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                {% include 'partials/project_badges.html' %}
+                            </div>
+                            <h2 class="mt-2 text-2xl font-normal tracking-tight transition-colors duration-300 group-hover:text-white md:text-[1.75rem]">
+                                {{ project.title }}
+                            </h2>
+                            <p class="mt-2 line-clamp-2 font-light leading-relaxed text-white/45 text-sm md:text-[0.95rem]">
+                                {{ project.tagline }}
+                            </p>
+                        </div>
+                    </a>
+                </article>
+                </div>
+                {% endwith %}
+                {% endfor %}
+            </div>
+
+            <p
+                x-show="visibleCount === 0"
+                x-cloak
+                class="mt-16 font-light text-white/40 text-lg md:text-xl"
+            >
+                Nothing in this filter yet.
+            </p>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function worksArchive() {
+    return {
+        track: 'all',
+        filtering: false,
+        filterTimer: null,
+        totalCount: {{ total_count }},
+        softwareCount: {{ software_count }},
+        storytellingCount: {{ storytelling_count }},
+
+        get visibleCount() {
+            if (this.track === 'all') return this.totalCount;
+            if (this.track === 'software') return this.softwareCount;
+            return this.storytellingCount;
+        },
+
+        init() {
+            const params = new URLSearchParams(window.location.search);
+            const value = params.get('track');
+            if (value === 'software' || value === 'storytelling' || value === 'all') {
+                this.track = value;
+            }
+        },
+
+        isVisible(projectTrack) {
+            return this.track === 'all' || this.track === projectTrack;
+        },
+
+        setTrack(value) {
+            if (value === this.track || this.filtering) return;
+
+            this.pauseAllVideos();
+            this.filtering = true;
+
+            if (this.filterTimer) {
+                window.clearTimeout(this.filterTimer);
+            }
+
+            this.filterTimer = window.setTimeout(() => {
+                this.track = value;
+
+                const url = new URL(window.location.href);
+                if (value === 'all') {
+                    url.searchParams.delete('track');
+                } else {
+                    url.searchParams.set('track', value);
+                }
+                window.history.replaceState({}, '', url);
+
+                this.$nextTick(() => {
+                    window.requestAnimationFrame(() => {
+                        this.filtering = false;
+                    });
+                });
+            }, 180);
+        },
+
+        pauseAllVideos() {
+            document.querySelectorAll('#works-grid video').forEach(function (video) {
+                video.pause();
+                video.currentTime = 0;
+            });
+        },
+    };
+}
+
+function workCard(hasVideo) {
+    return {
+        hasVideo: hasVideo,
+        pinned: false,
+        hovering: false,
+        playing: false,
+        get video() {
+            return this.$refs.video || null;
+        },
+        play() {
+            if (!this.video) return;
+            this.video.play().catch(function () {});
+        },
+        pause(reset) {
+            if (!this.video) return;
+            this.video.pause();
+            if (reset) {
+                this.video.currentTime = 0;
+            }
+        },
+        onEnter() {
+            this.hovering = true;
+            if (this.hasVideo && !this.pinned) {
+                this.play();
+            }
+        },
+        onLeave() {
+            this.hovering = false;
+            if (this.hasVideo && !this.pinned) {
+                this.pause(true);
+            }
+        },
+        togglePin() {
+            if (!this.hasVideo) return;
+            this.pinned = !this.pinned;
+            if (this.pinned) {
+                this.play();
+            } else {
+                this.pause(true);
+            }
+        },
+    };
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var banner = document.querySelector('.works-hero');
+    if (!banner) return;
+
+    var onScroll = function () {
+        document.body.classList.toggle('home-hero-light', window.scrollY < banner.offsetHeight * 0.9);
+    };
+
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,3 @@
+# Runtime data (not committed)
+media/*
+!media/.gitkeep

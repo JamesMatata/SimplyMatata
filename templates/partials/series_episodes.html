@@ -1,0 +1,119 @@
+{% if project.show_episodes %}
+<section
+    id="series-episodes"
+    class="series-episodes mt-20"
+    {% if project.is_comic %}
+    x-data="comicReader()"
+    x-init="loadSeriesEpisodes(document.getElementById('series-episodes-data'))"
+    @open-comic.window="handleOpenComic($event.detail)"
+    @keydown.escape.window="if (modalOpen) { closeModal(); $event.stopImmediatePropagation(); }"
+    @keydown.window.arrow-right="if (modalOpen) { nextPage(); $event.preventDefault(); }"
+    @keydown.window.arrow-left="if (modalOpen) { prevPage(); $event.preventDefault(); }"
+    {% endif %}
+>
+    {{ series_episodes|json_script:"series-episodes-data" }}
+
+    <div class="mb-8 text-left">
+        <h2 class="text-[11px] font-light uppercase tracking-[0.24em] text-white/35">
+            {{ project.episodes_section_label }}
+        </h2>
+        <p class="mt-2 font-light text-white/55 text-sm">
+            {{ project.episode_count }}
+            {{ project.episodes_plural_label }}
+            in this series — select one to {{ project.episodes_action_verb }}
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:gap-7">
+        {% for episode in project.episodes.all %}
+        {% with video_media=episode.featured_video %}
+        <article class="series-episode-card group text-left">
+            {% if project.is_comic and episode.show_comic_reader %}
+            <button
+                type="button"
+                @click="openEpisode({{ forloop.counter0 }})"
+                class="block w-full overflow-hidden rounded-lg border border-white/10 bg-[#111111] text-left transition-colors duration-300 hover:border-[#f5c518]/45 focus:outline-none focus-visible:border-[#f5c518]"
+            >
+            {% elif project.is_video_story and video_media %}
+            <button
+                type="button"
+                @click="$dispatch('open-film', { src: '{{ video_media.media_file.url|escapejs }}', title: '{{ episode.title|escapejs }}', poster: '{{ episode.card_thumbnail.url|escapejs }}' })"
+                class="block w-full overflow-hidden rounded-lg border border-white/10 bg-[#111111] text-left transition-colors duration-300 hover:border-[#f5c518]/45 focus:outline-none focus-visible:border-[#f5c518]"
+            >
+            {% else %}
+            <div class="overflow-hidden rounded-lg border border-white/10 bg-[#111111] transition-colors duration-300 hover:border-[#f5c518]/35">
+            {% endif %}
+                <div
+                    class="series-episode-frame relative overflow-hidden {% if project.is_comic %}aspect-[2/3]{% else %}aspect-[16/9]{% endif %}{% if video_media %} has-video{% endif %}"
+                    {% if video_media and project.is_video_story %}
+                    x-data="episodeCardVideo(true)"
+                    @mouseenter="onEnter()"
+                    @mouseleave="onLeave()"
+                    {% endif %}
+                >
+                    <img
+                        src="{{ episode.card_thumbnail.url }}"
+                        alt="{{ episode.title }}"
+                        class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                        loading="lazy"
+                        decoding="async"
+                    >
+
+                    {% if video_media and project.is_video_story %}
+                    <video
+                        x-ref="video"
+                        class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-300"
+                        :class="{ 'opacity-100': playing }"
+                        src="{{ video_media.media_file.url }}"
+                        muted
+                        loop
+                        playsinline
+                        preload="metadata"
+                        @play="playing = true"
+                        @pause="playing = false"
+                    ></video>
+
+                    <span class="pointer-events-none absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white opacity-0 backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4" aria-hidden="true">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </span>
+                    {% endif %}
+
+                    <div class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent px-4 pb-4 pt-12">
+                        <p class="text-[10px] font-light uppercase tracking-[0.2em] text-[#f5c518]">
+                            {{ project.episode_label|title }} {{ episode.display_number }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="px-4 py-4">
+                    <h3 class="font-light tracking-tight text-white/92 text-lg">{{ episode.title }}</h3>
+                    {% if episode.tagline %}
+                    <p class="mt-2 line-clamp-2 font-light leading-relaxed text-white/50 text-sm">
+                        {{ episode.tagline }}
+                    </p>
+                    {% endif %}
+                    {% if project.is_comic %}
+                    <p class="mt-3 text-[10px] font-light uppercase tracking-[0.18em] text-white/35">
+                        {{ episode.comic_page_count }} page{{ episode.comic_page_count|pluralize }}
+                    </p>
+                    {% endif %}
+                </div>
+            {% if project.is_comic and episode.show_comic_reader %}
+            </button>
+            {% elif project.is_video_story and video_media %}
+            </button>
+            {% else %}
+            </div>
+            {% endif %}
+        </article>
+        {% endwith %}
+        {% endfor %}
+    </div>
+
+    {% if project.is_comic %}
+    {% include 'partials/comic_reader_modal.html' %}
+    {% endif %}
+</section>
+{% endif %}

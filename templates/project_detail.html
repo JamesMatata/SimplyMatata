@@ -1,0 +1,896 @@
+{% extends 'base.html' %}
+{% load seo_tags %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    "name": "{{ project.title|escapejs }}",
+    "description": "{{ meta_description|default:project.tagline|escapejs }}",
+    "url": "{% absolute_uri request.path %}",
+    {% if seo_og_image %}"image": "{{ seo_og_image|escapejs }}",{% endif %}
+    "author": {
+        "@type": "Person",
+        "name": "{{ site_author|escapejs }}",
+        "url": "{{ site_url|escapejs }}"
+    }
+}
+</script>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .accent-yellow {
+        color: #f5c518;
+    }
+    .project-hero-media {
+        background: #111111;
+    }
+    .project-hero-frame {
+        position: relative;
+        overflow: hidden;
+    }
+    .project-hero-poster,
+    .project-hero-video {
+        transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease;
+    }
+    .project-hero-frame.is-hovering.is-image-only .project-hero-poster {
+        transform: scale(1.02);
+    }
+    .project-hero-frame.is-playing .project-hero-poster {
+        opacity: 0;
+    }
+    .project-hero-control {
+        opacity: 0;
+        transform: translateY(8px);
+        transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+    .project-hero-frame.is-hovering .project-hero-control,
+    .project-hero-frame.is-playing .project-hero-control,
+    .project-hero-frame.is-pinned .project-hero-control {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .gallery-item-caption {
+        transform: translateY(100%);
+        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .gallery-item:hover .gallery-item-caption,
+    .gallery-item:focus-within .gallery-item-caption {
+        transform: translateY(0);
+    }
+    .comic-cover-frame {
+        max-width: 14rem;
+    }
+    @media (min-width: 640px) {
+        .comic-cover-frame {
+            max-width: 16rem;
+        }
+    }
+    .comic-nav-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 9999px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(8, 8, 8, 0.72);
+        color: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(10px);
+        transition:
+            border-color 0.3s ease,
+            color 0.3s ease,
+            background-color 0.3s ease,
+            transform 0.3s ease,
+            opacity 0.3s ease;
+    }
+    @media (min-width: 640px) {
+        .comic-nav-btn {
+            width: 3.25rem;
+            height: 3.25rem;
+        }
+    }
+    .comic-nav-btn:hover:not(:disabled) {
+        border-color: #f5c518;
+        color: #f5c518;
+        background: rgba(12, 12, 12, 0.88);
+        transform: translateY(-50%) scale(1.04);
+    }
+    .comic-nav-btn:disabled {
+        opacity: 0.22;
+        cursor: default;
+    }
+    @media (pointer: coarse) {
+        .comic-nav-btn {
+            width: 3.5rem;
+            height: 3.5rem;
+        }
+        .comic-close-btn {
+            min-width: 8.75rem;
+            min-height: 3rem;
+            padding: 0.85rem 2rem;
+            font-size: 0.75rem;
+        }
+    }
+    .comic-close-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 7.5rem;
+        padding: 0.7rem 1.75rem;
+        border-radius: 9999px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(10, 10, 10, 0.82);
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 0.6875rem;
+        font-weight: 300;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        backdrop-filter: blur(12px);
+        transition:
+            border-color 0.3s ease,
+            color 0.3s ease,
+            background-color 0.3s ease,
+            transform 0.3s ease;
+    }
+    .comic-close-btn:hover {
+        border-color: #f5c518;
+        background: #f5c518;
+        color: #0a0a0a;
+        transform: translateY(-1px);
+    }
+    .floating-note {
+        position: fixed;
+        z-index: 100;
+        pointer-events: auto;
+        max-width: 14rem;
+        color: #141414;
+        background: linear-gradient(145deg, #f8d648 0%, #f5c518 55%, #e3b20f 100%);
+        border-radius: 1rem 1rem 1rem 0.4rem;
+        box-shadow:
+            0 10px 28px rgba(245, 197, 24, 0.28),
+            0 2px 8px rgba(0, 0, 0, 0.35);
+        animation:
+            noteRise 0.55s cubic-bezier(0.16, 1, 0.3, 1) both,
+            noteDrift 5s ease-in-out infinite;
+    }
+    @keyframes noteRise {
+        from {
+            opacity: 0;
+            transform: translateY(28px) scale(0.88);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    @keyframes noteDrift {
+        0%, 100% {
+            transform: translateY(0) rotate(-0.6deg);
+        }
+        50% {
+            transform: translateY(-10px) rotate(0.6deg);
+        }
+    }
+    .note-popup-panel {
+        transform-origin: bottom right;
+        animation: popupIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .note-popup-panel::after {
+        content: '';
+        position: absolute;
+        right: 1.25rem;
+        bottom: -7px;
+        width: 14px;
+        height: 14px;
+        rotate: 45deg;
+        background: #101010;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    @keyframes popupIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    .note-widget {
+        width: min(20rem, calc(100vw - 3rem));
+    }
+    .project-markdown-list {
+        list-style: disc;
+    }
+    .project-markdown-list li::marker {
+        color: rgba(245, 197, 24, 0.75);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<article class="px-6 pt-32 pb-24 md:px-10 md:pt-40 md:pb-32" x-data="commentSystem('{{ project.slug }}', '{% url 'post_comment' project.slug %}')" @keydown.escape.window="open = false">
+    <div class="mx-auto max-w-6xl">
+        <a
+            href="{% url 'works' %}"
+            class="inline-flex items-center gap-3 text-sm font-light uppercase tracking-[0.22em] text-white/45 transition-colors duration-300 hover:text-white"
+        >
+            <span aria-hidden="true">&larr;</span>
+            All works
+        </a>
+
+        <header class="mt-10 max-w-4xl">
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                {% include 'partials/project_badges.html' %}
+            </div>
+            <h1 class="mt-4 font-light leading-[1.02] tracking-tight text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
+                {{ project.title }}
+            </h1>
+            <p class="mt-6 max-w-2xl font-light leading-relaxed text-white/70 text-lg md:text-xl">
+                {{ project.tagline }}
+            </p>
+
+            {% if project.meta %}
+            <dl class="mt-8 flex flex-wrap gap-x-10 gap-y-4">
+                {% if project.meta.client %}
+                <div>
+                    <dt class="text-[11px] font-light uppercase tracking-[0.24em] text-white/35">Client</dt>
+                    <dd class="mt-2 font-light text-white/80">{{ project.meta.client }}</dd>
+                </div>
+                {% endif %}
+                {% if project.meta.year %}
+                <div>
+                    <dt class="text-[11px] font-light uppercase tracking-[0.24em] text-white/35">Year</dt>
+                    <dd class="mt-2 font-light text-white/80">{{ project.meta.year }}</dd>
+                </div>
+                {% endif %}
+                {% if project.meta.role %}
+                <div>
+                    <dt class="text-[11px] font-light uppercase tracking-[0.24em] text-white/35">Role</dt>
+                    <dd class="mt-2 font-light text-white/80">{{ project.meta.role }}</dd>
+                </div>
+                {% endif %}
+                {% if project.show_episodes %}
+                <div>
+                    <dt class="text-[11px] font-light uppercase tracking-[0.24em] text-white/35">
+                        {{ project.episodes_section_label }}
+                    </dt>
+                    <dd class="mt-2 font-light text-white/80">{{ project.episode_count }}</dd>
+                </div>
+                {% endif %}
+            </dl>
+            {% endif %}
+        </header>
+
+        {% with video_media=project.featured_video %}
+        <div
+            class="project-hero-media mt-12 overflow-hidden rounded-lg border border-white/10{% if project.is_comic and project.show_comic_reader %} comic-cover-frame cursor-pointer group{% elif project.is_comic %} comic-cover-frame{% endif %}"
+            {% if video_media and not project.is_series %}
+            x-data="projectHeroVideo(true)"
+            {% elif project.is_comic and project.show_comic_reader %}
+            @click="$dispatch('open-comic', { index: 0 })"
+            @keydown.enter="$dispatch('open-comic', { index: 0 })"
+            @keydown.space.prevent="$dispatch('open-comic', { index: 0 })"
+            role="button"
+            tabindex="0"
+            aria-label="Open comic reader"
+            {% endif %}
+        >
+            <div
+                class="project-hero-frame {% if project.is_comic %}aspect-[2/3]{% else %}aspect-[16/9]{% endif %} {% if video_media %}has-video cursor-pointer{% else %}is-image-only{% endif %}{% if project.is_comic and project.show_comic_reader and not video_media %} relative{% endif %}"
+                {% if video_media %}
+                :class="{ 'is-hovering': hovering, 'is-playing': playing, 'is-pinned': pinned }"
+                @mouseenter="onEnter()"
+                @mouseleave="onLeave()"
+                {% if project.is_video_story %}
+                @click="$dispatch('open-film', { src: '{{ video_media.media_file.url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ project.card_thumbnail.url|escapejs }}' })"
+                @keydown.enter.prevent="$dispatch('open-film', { src: '{{ video_media.media_file.url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ project.card_thumbnail.url|escapejs }}' })"
+                @keydown.space.prevent="$dispatch('open-film', { src: '{{ video_media.media_file.url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ project.card_thumbnail.url|escapejs }}' })"
+                role="button"
+                tabindex="0"
+                aria-label="Watch"
+                {% else %}
+                @click="togglePin()"
+                @keydown.enter.prevent="togglePin()"
+                @keydown.space.prevent="togglePin()"
+                role="button"
+                tabindex="0"
+                :aria-label="pinned ? 'Pause video' : 'Play video'"
+                {% endif %}
+                {% endif %}
+            >
+                <img
+                    src="{% if video_media %}{{ project.card_thumbnail.url }}{% else %}{{ project.featured_image.url }}{% endif %}"
+                    alt="{{ project.title }}"
+                    class="project-hero-poster h-full w-full object-cover{% if video_media %} absolute inset-0{% endif %}"
+                >
+
+                {% if video_media %}
+                <video
+                    x-ref="video"
+                    class="project-hero-video absolute inset-0 h-full w-full object-cover opacity-0"
+                    :class="{ 'opacity-100': playing }"
+                    src="{{ video_media.media_file.url }}"
+                    muted
+                    loop
+                    playsinline
+                    preload="metadata"
+                    @play="playing = true"
+                    @pause="playing = false"
+                ></video>
+                {% if project.is_video_story %}
+                <button
+                    type="button"
+                    @click.stop="$dispatch('open-film', { src: '{{ video_media.media_file.url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ project.card_thumbnail.url|escapejs }}' })"
+                    aria-label="Watch"
+                    class="project-hero-control absolute bottom-4 left-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/60 px-4 py-2 text-[11px] font-light uppercase tracking-[0.22em] text-white backdrop-blur-md hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-3.5 w-3.5" aria-hidden="true">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    <span>Watch</span>
+                </button>
+                {% else %}
+                <button
+                    type="button"
+                    @click.stop="togglePin()"
+                    :aria-label="pinned ? 'Pause video' : 'Play video'"
+                    class="project-hero-control absolute bottom-4 left-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/60 px-4 py-2 text-[11px] font-light uppercase tracking-[0.22em] text-white backdrop-blur-md hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black"
+                >
+                    <span x-text="pinned ? 'Pause' : 'Play'"></span>
+                </button>
+                {% endif %}
+                {% endif %}
+                {% if project.is_comic and project.show_comic_reader and not video_media %}
+                <div class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 pb-4 pt-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <span class="text-[10px] font-light uppercase tracking-[0.22em] text-[#f5c518]">Read comic</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endwith %}
+
+        {% if project.has_about_content %}
+        {% include 'partials/project_about.html' %}
+        {% endif %}
+
+        {% if project.show_comic_reader %}
+        {% include 'partials/comic_reader.html' %}
+        {% endif %}
+
+        {% if project.show_episodes %}
+        {% include 'partials/series_episodes.html' %}
+        {% endif %}
+
+        {% if project.is_video_story %}
+        {% include 'partials/film_player_modal.html' %}
+        {% endif %}
+
+        {% include 'partials/project_media_gallery.html' %}
+
+        {% include 'partials/project_tools.html' %}
+
+        <div class="mt-20">
+            <a
+                href="{% url 'works' %}"
+                class="inline-flex items-center gap-3 rounded-lg border border-white/15 px-6 py-4 text-sm font-light uppercase tracking-[0.22em] transition-all duration-300 hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black"
+            >
+                Back to works
+                <span aria-hidden="true">&rarr;</span>
+            </a>
+        </div>
+    </div>
+
+    <template x-for="(comment, index) in comments" :key="comment.timestamp + '-' + index">
+        <div
+            class="floating-note px-4 py-3"
+            :style="noteStyle(index)"
+        >
+            <p class="line-clamp-2 font-light leading-snug text-sm" x-text="comment.text"></p>
+        </div>
+    </template>
+
+    <div
+        x-show="open"
+        x-cloak
+        class="fixed inset-0 z-[105] bg-black/40 backdrop-blur-[2px]"
+        @click="open = false"
+    ></div>
+
+    <div class="fixed bottom-6 right-6 z-[110] md:bottom-8 md:right-8">
+        <div
+            x-show="open"
+            x-cloak
+            class="note-widget absolute bottom-full right-0 mb-3"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Leave a note"
+            @click.stop
+        >
+            <div class="note-popup-panel relative rounded-2xl border border-white/10 bg-[#101010] p-5 shadow-2xl">
+                <button
+                    type="button"
+                    @click="open = false"
+                    aria-label="Close"
+                    class="absolute right-3 top-3 text-white/40 transition-colors hover:text-white"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-5 w-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+
+                <p class="accent-yellow text-[11px] font-light uppercase tracking-[0.24em]">Leave a note</p>
+                <h2 class="mt-1 pr-8 font-light tracking-tight text-xl">A private thought</h2>
+
+                <form @submit.prevent="submitComment" class="mt-4 space-y-3">
+                    {% csrf_token %}
+                    <input
+                        type="text"
+                        name="website"
+                        x-model="honeypot"
+                        tabindex="-1"
+                        autocomplete="off"
+                        aria-hidden="true"
+                        class="absolute -left-[9999px] h-0 w-0 opacity-0"
+                    >
+                    <textarea
+                        x-ref="noteInput"
+                        x-model="content"
+                        rows="3"
+                        maxlength="2000"
+                        placeholder="Write something…"
+                        class="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2.5 font-light leading-relaxed text-white placeholder-white/30 focus:border-[#f5c518] focus:outline-none"
+                    ></textarea>
+
+                    <p x-show="error" x-text="error" x-cloak class="text-sm text-red-500"></p>
+
+                    <button
+                        type="submit"
+                        :disabled="submitting || !content.trim()"
+                        class="w-full rounded-lg border border-white/15 py-2.5 text-sm font-light uppercase tracking-[0.2em] transition-all duration-300 hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black disabled:opacity-40"
+                    >
+                        <span x-show="!submitting">Send note</span>
+                        <span x-show="submitting" x-cloak>Sending…</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <button
+            type="button"
+            @click="openNote()"
+            :aria-expanded="open"
+            aria-label="Leave a note"
+            class="flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-[#121212]/90 text-white shadow-lg backdrop-blur-md transition-all duration-300"
+            :class="open ? 'border-[#f5c518] bg-[#f5c518] text-black' : 'hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black'"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-6 w-6" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 0 1 .778-.332 48.294 48.294 0 0 0 5.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"/>
+            </svg>
+        </button>
+    </div>
+</article>
+{% endblock %}
+
+{% block extra_scripts %}
+{% load static %}
+<script src="{% static 'js/focus-trap.js' %}"></script>
+<script>
+function comicReader() {
+    return {
+        pages: [],
+        seriesEpisodes: [],
+        currentIndex: 0,
+        modalOpen: false,
+        touchStartX: 0,
+        readerLabel: '',
+        _releaseFocusTrap: null,
+        loadPages(el) {
+            if (!el) return;
+            try {
+                this.pages = JSON.parse(el.textContent);
+            } catch (e) {
+                this.pages = [];
+            }
+        },
+        loadSeriesEpisodes(el) {
+            if (!el) return;
+            try {
+                this.seriesEpisodes = JSON.parse(el.textContent);
+            } catch (e) {
+                this.seriesEpisodes = [];
+            }
+        },
+        get activePage() {
+            return this.pages[this.currentIndex] || null;
+        },
+        handleOpenComic(detail) {
+            if (!detail) return;
+            if (detail.pages) {
+                this.openReader(detail);
+                return;
+            }
+            this.openAt(detail.index || 0);
+        },
+        openAt(index) {
+            if (!this.pages.length) return;
+            this.readerLabel = '';
+            this.currentIndex = Math.max(0, Math.min(index, this.pages.length - 1));
+            this.modalOpen = true;
+            document.body.style.overflow = 'hidden';
+            this.activateFocusTrap();
+        },
+        openEpisode(index) {
+            const episode = this.seriesEpisodes[index];
+            if (!episode || !episode.pages || !episode.pages.length) return;
+            this.openReader({
+                pages: episode.pages,
+                index: 0,
+                label: episode.title,
+            });
+        },
+        openReader(detail) {
+            if (!detail || !detail.pages || !detail.pages.length) return;
+            this.pages = detail.pages;
+            this.readerLabel = detail.label || '';
+            this.currentIndex = Math.max(0, Math.min(detail.index || 0, this.pages.length - 1));
+            this.modalOpen = true;
+            document.body.style.overflow = 'hidden';
+            this.activateFocusTrap();
+        },
+        closeModal() {
+            this.releaseFocusTrap();
+            this.modalOpen = false;
+            document.body.style.overflow = '';
+        },
+        activateFocusTrap() {
+            this.releaseFocusTrap();
+            this.$nextTick(() => {
+                if (this.$refs.modal && typeof createFocusTrap === 'function') {
+                    this._releaseFocusTrap = createFocusTrap(this.$refs.modal);
+                }
+            });
+        },
+        releaseFocusTrap() {
+            if (this._releaseFocusTrap) {
+                this._releaseFocusTrap();
+                this._releaseFocusTrap = null;
+            }
+        },
+        nextPage() {
+            if (this.currentIndex < this.pages.length - 1) {
+                this.currentIndex += 1;
+            }
+        },
+        prevPage() {
+            if (this.currentIndex > 0) {
+                this.currentIndex -= 1;
+            }
+        },
+        onTouchStart(event) {
+            this.touchStartX = event.changedTouches[0].clientX;
+        },
+        onTouchEnd(event) {
+            const deltaX = event.changedTouches[0].clientX - this.touchStartX;
+            if (Math.abs(deltaX) < 48) return;
+            if (deltaX < 0) {
+                this.nextPage();
+            } else {
+                this.prevPage();
+            }
+        },
+    };
+}
+
+function episodeCardVideo(hasVideo) {
+    return {
+        hasVideo: hasVideo,
+        playing: false,
+        get video() {
+            return this.$refs.video || null;
+        },
+        play() {
+            if (!this.video) return;
+            this.video.play().catch(function () {});
+        },
+        pause(reset) {
+            if (!this.video) return;
+            this.video.pause();
+            if (reset) {
+                this.video.currentTime = 0;
+            }
+        },
+        onEnter() {
+            if (this.hasVideo) {
+                this.play();
+            }
+        },
+        onLeave() {
+            if (this.hasVideo) {
+                this.pause(true);
+            }
+        },
+    };
+}
+
+function filmPlayer() {
+    return {
+        open: false,
+        src: '',
+        title: '',
+        poster: '',
+        isFullscreen: false,
+        _releaseFocusTrap: null,
+        init() {
+            document.addEventListener('fullscreenchange', () => {
+                this.isFullscreen = !!document.fullscreenElement;
+                if (!this.isFullscreen) {
+                    this.unlockOrientation();
+                }
+            });
+        },
+        openFilm(detail) {
+            if (!detail || !detail.src) return;
+            this.src = detail.src;
+            this.title = detail.title || '';
+            this.poster = detail.poster || '';
+            this.open = true;
+            document.body.style.overflow = 'hidden';
+            this.activateFocusTrap();
+            this.$nextTick(() => {
+                const video = this.$refs.video;
+                if (video) {
+                    video.currentTime = 0;
+                    video.play().catch(function () {});
+                }
+            });
+        },
+        closeFilm() {
+            const video = this.$refs.video;
+            if (video) {
+                video.pause();
+            }
+            this.exitFullscreen();
+            this.releaseFocusTrap();
+            this.open = false;
+            this.src = '';
+            document.body.style.overflow = '';
+        },
+        activateFocusTrap() {
+            this.releaseFocusTrap();
+            this.$nextTick(() => {
+                if (this.$refs.stage && typeof createFocusTrap === 'function') {
+                    this._releaseFocusTrap = createFocusTrap(this.$refs.stage);
+                }
+            });
+        },
+        releaseFocusTrap() {
+            if (this._releaseFocusTrap) {
+                this._releaseFocusTrap();
+                this._releaseFocusTrap = null;
+            }
+        },
+        async toggleFullscreen() {
+            const stage = this.$refs.stage;
+            if (!stage) return;
+            if (document.fullscreenElement) {
+                this.exitFullscreen();
+                return;
+            }
+            try {
+                if (stage.requestFullscreen) {
+                    await stage.requestFullscreen();
+                } else if (stage.webkitRequestFullscreen) {
+                    stage.webkitRequestFullscreen();
+                }
+            } catch (e) {
+                // fullscreen may be blocked; ignore
+            }
+            this.lockOrientation();
+        },
+        exitFullscreen() {
+            this.unlockOrientation();
+            if (document.fullscreenElement) {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(function () {});
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
+        },
+        lockOrientation() {
+            const orientation = screen.orientation;
+            if (orientation && typeof orientation.lock === 'function') {
+                orientation.lock('landscape').catch(function () {});
+            }
+        },
+        unlockOrientation() {
+            const orientation = screen.orientation;
+            if (orientation && typeof orientation.unlock === 'function') {
+                try {
+                    orientation.unlock();
+                } catch (e) {
+                    // not supported everywhere; ignore
+                }
+            }
+        },
+    };
+}
+
+function projectHeroVideo(hasVideo) {
+    return {
+        hasVideo: hasVideo,
+        pinned: false,
+        hovering: false,
+        playing: false,
+        get video() {
+            return this.$refs.video || null;
+        },
+        play() {
+            if (!this.video) return;
+            this.video.play().catch(function () {});
+        },
+        pause(reset) {
+            if (!this.video) return;
+            this.video.pause();
+            if (reset) {
+                this.video.currentTime = 0;
+            }
+        },
+        onEnter() {
+            this.hovering = true;
+            if (this.hasVideo && !this.pinned) {
+                this.play();
+            }
+        },
+        onLeave() {
+            this.hovering = false;
+            if (this.hasVideo && !this.pinned) {
+                this.pause(true);
+            }
+        },
+        togglePin() {
+            if (!this.hasVideo) return;
+            this.pinned = !this.pinned;
+            if (this.pinned) {
+                this.play();
+            } else {
+                this.pause(true);
+            }
+        },
+    };
+}
+
+function commentSystem(projectSlug, postUrl) {
+    return {
+        projectSlug,
+        postUrl,
+        open: false,
+        content: '',
+        honeypot: '',
+        comments: [],
+        submitting: false,
+        error: '',
+
+        init() {
+            const key = `comments_${this.projectSlug}`;
+            try {
+                const stored = localStorage.getItem(key);
+                if (stored) {
+                    this.comments = JSON.parse(stored);
+                }
+            } catch (e) {
+                this.comments = [];
+            }
+        },
+
+        openNote() {
+            this.open = !this.open;
+            if (!this.open) return;
+            this.error = '';
+            this.$nextTick(() => {
+                if (this.$refs.noteInput) {
+                    this.$refs.noteInput.focus();
+                }
+            });
+        },
+
+        get storageKey() {
+            return `comments_${this.projectSlug}`;
+        },
+
+        noteStyle(index) {
+            const spots = [
+                { bottom: '1.5rem', left: '1.25rem' },
+                { bottom: '3.75rem', left: '22%' },
+                { bottom: '2rem', left: '48%' },
+                { bottom: '4.25rem', right: '6.5rem' },
+                { bottom: '1.75rem', left: '68%' },
+                { bottom: '3rem', left: '38%' },
+            ];
+            const spot = spots[index % spots.length];
+            const layer = Math.floor(index / spots.length) * 1.25;
+            const riseDelay = index * 0.07;
+            const driftDelay = 0.55 + index * 0.4;
+            const parts = [
+                `animation-delay:${riseDelay}s, ${driftDelay}s`,
+                `bottom:calc(${spot.bottom} + ${layer}rem)`,
+            ];
+
+            if (spot.left) {
+                parts.push(`left:calc(${spot.left} + ${layer * 0.5}rem)`);
+            }
+            if (spot.right) {
+                parts.push(`right:calc(${spot.right} + ${layer * 0.5}rem)`);
+            }
+
+            return parts.join(';');
+        },
+
+        getCsrfToken() {
+            const input = document.querySelector('[name=csrfmiddlewaretoken]');
+            return input ? input.value : '';
+        },
+
+        saveToStorage() {
+            localStorage.setItem(this.storageKey, JSON.stringify(this.comments));
+        },
+
+        async submitComment() {
+            this.error = '';
+
+            const trimmed = this.content.trim();
+            if (!trimmed) {
+                this.error = 'Write something first.';
+                return;
+            }
+
+            this.submitting = true;
+
+            try {
+                const body = new URLSearchParams({
+                    content: trimmed,
+                    website: this.honeypot,
+                });
+
+                const response = await fetch(this.postUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': this.getCsrfToken(),
+                    },
+                    body,
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    this.error = data.message || 'Something went wrong.';
+                    return;
+                }
+
+                if (data.comment) {
+                    this.comments.unshift({
+                        text: data.comment,
+                        timestamp: data.timestamp,
+                    });
+                    this.saveToStorage();
+                }
+
+                this.content = '';
+                this.honeypot = '';
+                this.open = false;
+            } catch (e) {
+                this.error = 'Network error. Try again.';
+            } finally {
+                this.submitting = false;
+            }
+        },
+    };
+}
+</script>
+{% endblock %}

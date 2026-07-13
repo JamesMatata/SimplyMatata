@@ -1,0 +1,18 @@
+{% if project.show_tools %}
+<section class="mt-20 text-left">
+    <h2 class="text-[11px] font-light uppercase tracking-[0.24em] text-white/35">Tools &amp; stack</h2>
+    <p class="mt-2 max-w-2xl font-light text-white/55 text-sm">
+        Technologies and platforms used to design, build, and ship this project.
+    </p>
+
+    <ul class="mt-8 flex flex-wrap gap-2.5 sm:gap-3">
+        {% for tool in project.tools %}
+        <li>
+            <span class="inline-flex items-center rounded-full border border-white/12 bg-white/[0.03] px-4 py-2 text-[11px] font-light uppercase tracking-[0.18em] text-white/72 transition-colors duration-300 hover:border-[#f5c518]/45 hover:text-[#f5c518]">
+                {{ tool }}
+            </span>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
