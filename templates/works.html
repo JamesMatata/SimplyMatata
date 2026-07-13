@@ -241,14 +241,14 @@
                 </div>
                 {% endwith %}
                 {% empty %}
-                {% include 'partials/works_empty_state.html' with full_width=True title="The archive is empty" %}
+                {% include 'partials/works_empty_state.html' with full_width=True title="The archive is empty" extra_class="mt-8 md:mt-10" %}
                 {% endfor %}
             </div>
 
             <div
                 x-show="visibleCount === 0 && totalCount > 0"
                 x-cloak
-                class="mt-4"
+                class="mt-8 md:mt-10"
             >
                 {% include 'partials/works_empty_state.html' with title="Nothing in this lane" %}
             </div>
