@@ -172,9 +172,10 @@ class ProjectAdmin(admin.ModelAdmin):
             ('Cover art', {
                 'fields': ('thumbnail', 'featured_image'),
                 'description': (
-                    'Card thumbnail: 4:5 portrait (1080×1350) for works cards and homepage. '
-                    'Detail cover: 16:9 (1920×1080) for film/ad project pages, or 4:5 for comics. '
-                    'Provide at least one — if only one is uploaded, it is reused everywhere.'
+                    'Card thumbnail (4:5, 1080×1350): used on works cards and homepage. '
+                    'Detail cover (16:9, 1920×1080 for film/ad): used on the project page. '
+                    'If you only upload the 4:5 card thumbnail, the project page uses 4:5. '
+                    'Upload a 16:9 detail cover for a widescreen film hero.'
                 ),
             }),
             ('About this project (optional)', {
