@@ -13,55 +13,68 @@
         x-transition:leave="transition-opacity duration-200 ease-in"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class="film-player-modal fixed inset-0 z-[45] bg-[#050505]"
+        class="film-player-modal fixed inset-0 z-[45] bg-black"
+        :class="{ 'is-fullscreen': isFullscreen, 'controls-visible': controlsVisible }"
         x-effect="document.body.classList.toggle('immersive-modal-open', open)"
         role="dialog"
         aria-modal="true"
         :aria-label="title ? ('Watching ' + title) : 'Watching film'"
+        @pointerdown="revealControls()"
+        @mousemove="revealControls()"
+        @touchstart.passive="revealControls()"
     >
-        <div class="relative flex h-full flex-col pt-[5rem] sm:pt-[5.5rem] md:pt-[6.5rem]">
-            <div class="relative flex min-h-0 flex-1 items-center justify-center px-2 pb-24 pt-4 sm:px-6 sm:pb-28">
+        <div class="film-player-stage relative flex h-[100dvh] max-h-[100dvh] w-full flex-col">
+            <div class="film-player-media relative min-h-0 flex-1">
                 <video
                     x-ref="video"
                     x-show="src"
                     :src="src"
                     :poster="poster"
-                    class="max-h-full w-full max-w-6xl bg-black"
+                    class="film-player-video absolute inset-0 h-full w-full bg-black object-contain"
                     controls
                     playsinline
+                    webkit-playsinline
                     preload="metadata"
+                    @play="revealControls()"
                 ></video>
                 <iframe
                     x-show="youtube"
                     :src="youtube"
-                    class="aspect-video h-auto max-h-full w-full max-w-6xl border-0 bg-black"
+                    class="film-player-iframe absolute inset-0 h-full w-full border-0 bg-black"
                     title="Film player"
                     referrerpolicy="strict-origin-when-cross-origin"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                     allowfullscreen
                 ></iframe>
             </div>
 
-            <footer class="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-wrap items-center justify-center gap-3 px-6 pb-6 sm:pb-8">
-                <button
-                    type="button"
-                    @click="toggleFullscreen()"
-                    aria-label="Rotate and enter fullscreen"
-                    class="comic-close-btn pointer-events-auto"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mr-2 h-4 w-4" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M20.25 20.25v-4.5m0 4.5h-4.5m4.5 0L15 15M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75v4.5m0-4.5h-4.5m4.5 0L15 9"/>
-                    </svg>
-                    <span x-text="isFullscreen ? 'Exit fullscreen' : 'Rotate / fullscreen'"></span>
-                </button>
-                <button
-                    type="button"
-                    @click="closeFilm()"
-                    aria-label="Close player"
-                    class="comic-close-btn pointer-events-auto"
-                >
-                    Close
-                </button>
+            <footer
+                class="film-player-chrome absolute inset-x-0 bottom-0 z-20"
+                :class="controlsVisible ? 'is-shown' : 'is-hidden'"
+                @pointerdown.stop="revealControls()"
+            >
+                <div class="film-player-chrome-inner flex items-center justify-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-10 sm:gap-3 sm:px-6 sm:pb-8">
+                    <button
+                        type="button"
+                        @click="toggleFullscreen()"
+                        :aria-label="isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'"
+                        class="film-chrome-btn"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M20.25 20.25v-4.5m0 4.5h-4.5m4.5 0L15 15M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75v4.5m0-4.5h-4.5m4.5 0L15 9"/>
+                        </svg>
+                        <span class="sm:hidden" x-text="isFullscreen ? 'Exit' : 'Full'"></span>
+                        <span class="hidden sm:inline" x-text="isFullscreen ? 'Exit fullscreen' : 'Fullscreen'"></span>
+                    </button>
+                    <button
+                        type="button"
+                        @click="closeFilm()"
+                        aria-label="Close player"
+                        class="film-chrome-btn"
+                    >
+                        Close
+                    </button>
+                </div>
             </footer>
         </div>
     </div>
