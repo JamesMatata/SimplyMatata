@@ -42,15 +42,9 @@
         opacity: 0;
     }
     .project-hero-control {
-        opacity: 0;
-        transform: translateY(8px);
-        transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-    }
-    .project-hero-frame.is-hovering .project-hero-control,
-    .project-hero-frame.is-playing .project-hero-control,
-    .project-hero-frame.is-pinned .project-hero-control {
         opacity: 1;
         transform: translateY(0);
+        transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
     }
     .gallery-item-caption {
         transform: translateY(100%);
@@ -451,9 +445,9 @@
                     type="button"
                     @click.stop="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', youtube: '{{ video_media.youtube_modal_embed_url|default:''|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ poster_url|escapejs }}' })"
                     aria-label="Watch"
-                    class="project-hero-control absolute bottom-4 left-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/60 px-4 py-2 text-[11px] font-light uppercase tracking-[0.22em] text-white backdrop-blur-md hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black"
+                    class="project-hero-control absolute bottom-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/65 px-3 py-1.5 text-[10px] font-light uppercase tracking-[0.18em] text-white backdrop-blur-md hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black sm:bottom-4 sm:left-4 sm:gap-2 sm:px-4 sm:py-2 sm:text-[11px] sm:tracking-[0.22em]"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-3.5 w-3.5" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true">
                         <path d="M8 5v14l11-7z"/>
                     </svg>
                     <span>Watch</span>
@@ -463,14 +457,14 @@
                     type="button"
                     @click.stop="togglePin()"
                     :aria-label="pinned ? 'Pause video' : 'Play video'"
-                    class="project-hero-control absolute bottom-4 left-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/60 px-4 py-2 text-[11px] font-light uppercase tracking-[0.22em] text-white backdrop-blur-md hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black"
+                    class="project-hero-control absolute bottom-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/65 px-3 py-1.5 text-[10px] font-light uppercase tracking-[0.18em] text-white backdrop-blur-md hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black sm:bottom-4 sm:left-4 sm:gap-2 sm:px-4 sm:py-2 sm:text-[11px] sm:tracking-[0.22em]"
                 >
                     <span x-text="pinned ? 'Pause' : 'Play'"></span>
                 </button>
                 {% endif %}
                 {% endif %}
                 {% if project.is_comic and project.show_comic_reader and not video_media %}
-                <div class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 pb-4 pt-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                <div class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 pb-4 pt-10">
                     <span class="text-[10px] font-light uppercase tracking-[0.22em] text-[#f5c518]">Read comic</span>
                 </div>
                 {% endif %}

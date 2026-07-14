@@ -36,14 +36,6 @@
                     @play="playing = true"
                     @pause="playing = false"
                 ></video>
-                <button
-                    type="button"
-                    @click.prevent.stop="togglePin()"
-                    :aria-label="pinned ? 'Pause video' : 'Play video'"
-                    class="work-card-control absolute bottom-4 left-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/60 px-4 py-2 text-[11px] font-light uppercase tracking-[0.22em] text-white backdrop-blur-md hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black"
-                >
-                    <span x-text="pinned ? 'Pause' : 'Play'"></span>
-                </button>
                 {% elif video_media.is_youtube %}
                 <iframe
                     x-show="playing"
@@ -56,6 +48,18 @@
                     allowfullscreen
                 ></iframe>
                 {% endif %}
+                <button
+                    type="button"
+                    @click.prevent.stop="togglePin()"
+                    :aria-label="pinned || playing ? 'Pause preview' : 'Play preview'"
+                    class="work-card-control absolute bottom-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/65 px-3 py-1.5 text-[10px] font-light uppercase tracking-[0.18em] text-white backdrop-blur-md hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black sm:bottom-4 sm:left-4 sm:gap-2 sm:px-4 sm:py-2 sm:text-[11px] sm:tracking-[0.22em]"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-3 w-3" aria-hidden="true">
+                        <path x-show="!(pinned || playing)" d="M8 5v14l11-7z"/>
+                        <path x-show="pinned || playing" d="M6 5h4v14H6zm8 0h4v14h-4z"/>
+                    </svg>
+                    <span x-text="pinned || playing ? 'Pause' : 'Play'"></span>
+                </button>
             {% endif %}
 
             <div class="work-card-shade pointer-events-none absolute inset-0"></div>

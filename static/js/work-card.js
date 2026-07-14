@@ -6,6 +6,9 @@ function workCard(options) {
         pinned: false,
         hovering: false,
         playing: false,
+        get hasPreview() {
+            return this.hasInlineVideo || !!this.youtubePreviewUrl;
+        },
         get video() {
             return this.$refs.video || null;
         },
@@ -43,12 +46,20 @@ function workCard(options) {
             }
         },
         togglePin() {
-            if (!this.hasInlineVideo) return;
+            if (!this.hasPreview) return;
             this.pinned = !this.pinned;
             if (this.pinned) {
-                this.playInline();
+                if (this.hasInlineVideo) {
+                    this.playInline();
+                } else if (this.youtubePreviewUrl) {
+                    this.playing = true;
+                }
             } else {
-                this.pauseInline(true);
+                if (this.hasInlineVideo) {
+                    this.pauseInline(true);
+                } else if (this.youtubePreviewUrl) {
+                    this.playing = false;
+                }
             }
         },
     };

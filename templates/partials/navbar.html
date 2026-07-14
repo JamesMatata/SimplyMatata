@@ -1,6 +1,6 @@
 {% load static %}
 <header x-data="{ open: false }" @keydown.escape.window="open = false" :class="{ 'nav-is-open': open }" class="fixed top-0 left-0 right-0 z-50">
-    <nav class="relative z-50 px-6 py-5 sm:py-6 md:px-10 md:py-8 lg:px-12">
+    <nav class="relative z-[70] px-6 py-5 sm:py-6 md:px-10 md:py-8 lg:px-12">
         <div class="flex w-full items-center justify-between">
             <a href="{% url 'index' %}" class="block">
                 <img
@@ -44,7 +44,7 @@
         x-transition:leave="transition-transform ease-in duration-400"
         x-transition:leave-start="translate-y-0"
         x-transition:leave-end="-translate-y-full"
-        class="nav-drawer fixed inset-0 z-40 flex flex-col overflow-y-auto bg-black text-white"
+        class="nav-drawer fixed inset-0 z-[60] flex flex-col overflow-y-auto bg-black text-white"
     >
         <div class="nav-drawer-body px-5 sm:px-6 md:px-10 lg:px-14 xl:px-20">
             <ul class="nav-drawer-links">
