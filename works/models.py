@@ -539,7 +539,12 @@ class ProjectMedia(models.Model):
     def youtube_modal_embed_url(self):
         if not self.is_youtube:
             return ''
-        return youtube_embed_url(self.youtube_url, autoplay=True, controls=True)
+        return youtube_embed_url(
+            self.youtube_url,
+            autoplay=True,
+            controls=True,
+            allow_fullscreen=False,
+        )
 
     def clean(self):
         has_file = bool(self.media_file and getattr(self.media_file, 'name', ''))

@@ -27,7 +27,7 @@ def youtube_video_id(url):
     return ''
 
 
-def youtube_embed_url(url, autoplay=False, controls=True):
+def youtube_embed_url(url, autoplay=False, controls=True, allow_fullscreen=True):
     """Build a privacy-enhanced YouTube embed URL."""
     video_id = youtube_video_id(url)
     if not video_id:
@@ -37,4 +37,7 @@ def youtube_embed_url(url, autoplay=False, controls=True):
         params.extend(['autoplay=1', 'mute=1'])
     if not controls:
         params.append('controls=0')
+    # Disable YouTube's own fullscreen so it does not fight our modal player state.
+    if not allow_fullscreen:
+        params.append('fs=0')
     return f'https://www.youtube-nocookie.com/embed/{video_id}?{"&".join(params)}'

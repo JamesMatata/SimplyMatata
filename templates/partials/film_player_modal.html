@@ -14,14 +14,11 @@
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
         class="film-player-modal fixed z-[45] overflow-hidden bg-black"
-        :class="{ 'is-fullscreen': isFullscreen, 'controls-visible': controlsVisible }"
+        :class="{ 'is-fullscreen': isFullscreen }"
         x-effect="document.body.classList.toggle('immersive-modal-open', open)"
         role="dialog"
         aria-modal="true"
         :aria-label="title ? ('Watching ' + title) : 'Watching film'"
-        @pointerdown="revealControls()"
-        @mousemove="revealControls()"
-        @touchstart.passive="revealControls()"
     >
         <div class="film-player-stage relative flex h-full w-full flex-col overflow-hidden">
             <div class="film-player-media relative min-h-0 flex-1 overflow-hidden">
@@ -35,7 +32,6 @@
                     playsinline
                     webkit-playsinline
                     preload="metadata"
-                    @play="revealControls()"
                 ></video>
                 <iframe
                     x-show="youtube"
@@ -43,16 +39,12 @@
                     class="film-player-iframe absolute inset-0 h-full w-full border-0 bg-black"
                     title="Film player"
                     referrerpolicy="strict-origin-when-cross-origin"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                    allowfullscreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 ></iframe>
             </div>
 
-            <div
-                class="film-player-chrome"
-                :class="controlsVisible || !isFullscreen ? 'is-shown' : 'is-hidden'"
-                @pointerdown.stop="revealControls()"
-            >
+            {# Always-visible chrome: YouTube iframes swallow taps, so auto-hide cannot be recovered #}
+            <div class="film-player-chrome is-shown" @pointerdown.stop>
                 <button
                     type="button"
                     @click="toggleFullscreen()"

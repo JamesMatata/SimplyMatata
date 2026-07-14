@@ -217,11 +217,6 @@
         visibility: hidden;
         pointer-events: none;
     }
-    .film-player-modal:not(.is-fullscreen) .film-player-chrome {
-        opacity: 1 !important;
-        visibility: visible !important;
-        pointer-events: auto !important;
-    }
     .film-chrome-btn {
         display: inline-flex;
         align-items: center;
@@ -258,9 +253,8 @@
             background: transparent;
             pointer-events: none;
         }
-        .film-player-chrome.is-shown,
-        .film-player-modal:not(.is-fullscreen) .film-player-chrome {
-            pointer-events: none !important;
+        .film-player-chrome.is-shown {
+            pointer-events: none;
         }
         .film-chrome-btn {
             position: absolute;
@@ -800,8 +794,6 @@ function episodeCardVideo(hasVideo) {
 }
 
 function filmPlayer() {
-    const HIDE_DELAY_MS = 5000;
-
     return {
         open: false,
         src: '',
@@ -809,49 +801,29 @@ function filmPlayer() {
         title: '',
         poster: '',
         isFullscreen: false,
-        controlsVisible: true,
-        _hideTimer: null,
         _releaseFocusTrap: null,
         init() {
-            document.addEventListener('fullscreenchange', () => {
-                this.isFullscreen = !!document.fullscreenElement;
-                if (!this.isFullscreen) {
-                    this.unlockOrientation();
-                }
-                this.revealControls();
-            });
-            document.addEventListener('webkitfullscreenchange', () => {
-                this.isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
-                if (!this.isFullscreen) {
-                    this.unlockOrientation();
-                }
-                this.revealControls();
-            });
+            const onFsChange = () => this.syncFullscreenState();
+            document.addEventListener('fullscreenchange', onFsChange);
+            document.addEventListener('webkitfullscreenchange', onFsChange);
         },
-        revealControls() {
-            if (!this.open) return;
-            this.controlsVisible = true;
-            this.scheduleHideControls();
+        getFullscreenElement() {
+            return document.fullscreenElement || document.webkitFullscreenElement || null;
         },
-        scheduleHideControls() {
-            if (this._hideTimer) {
-                window.clearTimeout(this._hideTimer);
+        isOurFullscreen() {
+            const stage = this.$refs.stage;
+            const active = this.getFullscreenElement();
+            // Strict: only our stage counts. YouTube iframe fullscreen must not.
+            return !!(stage && active === stage);
+        },
+        syncFullscreenState() {
+            const wasOurs = this.isFullscreen;
+            this.isFullscreen = this.isOurFullscreen();
+            if (wasOurs && !this.isFullscreen) {
+                this.unlockOrientation();
             }
-            // Only auto-hide chrome in true fullscreen; otherwise keep Close reachable on mobile
             if (!this.isFullscreen) {
-                this.controlsVisible = true;
-                return;
-            }
-            this._hideTimer = window.setTimeout(() => {
-                if (this.open && this.isFullscreen) {
-                    this.controlsVisible = false;
-                }
-            }, HIDE_DELAY_MS);
-        },
-        clearHideTimer() {
-            if (this._hideTimer) {
-                window.clearTimeout(this._hideTimer);
-                this._hideTimer = null;
+                this.unlockOrientation();
             }
         },
         openFilm(detail) {
@@ -862,10 +834,9 @@ function filmPlayer() {
             this.poster = detail.poster || '';
             if (!this.src && !this.youtube) return;
             this.open = true;
-            this.controlsVisible = true;
+            this.isFullscreen = false;
             document.body.style.overflow = 'hidden';
             this.activateFocusTrap();
-            this.scheduleHideControls();
             this.$nextTick(() => {
                 const video = this.$refs.video;
                 if (video && this.src) {
@@ -879,13 +850,13 @@ function filmPlayer() {
             if (video) {
                 video.pause();
             }
-            this.clearHideTimer();
-            this.youtube = '';
-            this.exitFullscreen();
+            this.exitOurFullscreen();
+            this.unlockOrientation();
             this.releaseFocusTrap();
             this.open = false;
             this.src = '';
-            this.controlsVisible = true;
+            this.youtube = '';
+            this.isFullscreen = false;
             document.body.style.overflow = '';
         },
         activateFocusTrap() {
@@ -907,10 +878,15 @@ function filmPlayer() {
             const video = this.$refs.video;
             if (!stage) return;
 
-            const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
-            if (isFs) {
-                this.exitFullscreen();
+            if (this.isOurFullscreen()) {
+                this.exitOurFullscreen();
                 return;
+            }
+
+            // If another element (e.g. legacy YouTube) holds fullscreen, exit it first
+            const active = this.getFullscreenElement();
+            if (active && active !== stage) {
+                this.exitAnyFullscreen();
             }
 
             try {
@@ -918,19 +894,29 @@ function filmPlayer() {
                     await stage.requestFullscreen();
                 } else if (stage.webkitRequestFullscreen) {
                     stage.webkitRequestFullscreen();
-                } else if (video && typeof video.webkitEnterFullscreen === 'function') {
+                } else if (video && this.src && typeof video.webkitEnterFullscreen === 'function') {
                     video.webkitEnterFullscreen();
                 }
             } catch (e) {
                 // fullscreen may be blocked; ignore
             }
-            this.lockOrientation();
-            this.revealControls();
+            this.syncFullscreenState();
+            if (this.isOurFullscreen()) {
+                this.lockOrientation();
+            }
         },
-        exitFullscreen() {
+        exitOurFullscreen() {
+            if (!this.isOurFullscreen()) {
+                this.isFullscreen = false;
+                this.unlockOrientation();
+                return;
+            }
+            this.exitAnyFullscreen();
             this.unlockOrientation();
-            const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
-            if (!isFs) return;
+            this.isFullscreen = false;
+        },
+        exitAnyFullscreen() {
+            if (!this.getFullscreenElement()) return;
             if (document.exitFullscreen) {
                 document.exitFullscreen().catch(function () {});
             } else if (document.webkitExitFullscreen) {
