@@ -288,67 +288,7 @@
 
     <div class="grid grid-cols-1 gap-y-10 gap-x-6 md:grid-cols-2 md:gap-x-8 md:gap-y-12 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-12">
         {% for project in featured_projects %}
-        {% with video_media=project.featured_video %}
-        <article
-            x-data="workCard({{ project.has_featured_video|yesno:'true,false' }})"
-            class="work-card group"
-        >
-            <a href="{% url 'project_detail' project.slug %}" class="block">
-                <div
-                    class="work-card-frame aspect-[4/5] rounded-lg border border-white/10 {% if video_media %}has-video{% else %}is-image-only{% endif %}"
-                    :class="{ 'is-hovering': hovering, 'is-playing': playing, 'is-pinned': pinned }"
-                    @mouseenter="onEnter()"
-                    @mouseleave="onLeave()"
-                >
-                    <img
-                        src="{{ project.card_thumbnail|media_url }}"
-                        alt="{{ project.title }}"
-                        class="work-card-poster absolute inset-0 h-full w-full object-cover"
-                    >
-
-                    {% if video_media %}
-                    <video
-                        x-ref="video"
-                        class="work-card-video absolute inset-0 h-full w-full object-cover opacity-0"
-                        :class="{ 'opacity-100': playing }"
-                        src="{{ video_media.media_file|media_url }}"
-                        muted
-                        loop
-                        playsinline
-                        preload="metadata"
-                        @play="playing = true"
-                        @pause="playing = false"
-                    ></video>
-                    <button
-                        type="button"
-                        @click.prevent.stop="togglePin()"
-                        :aria-label="pinned ? 'Pause video' : 'Play video'"
-                        class="work-card-control absolute bottom-4 left-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/60 px-4 py-2 text-[11px] font-light uppercase tracking-[0.22em] text-white backdrop-blur-md hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black"
-                    >
-                        <span x-text="pinned ? 'Pause' : 'Play'"></span>
-                    </button>
-                    {% endif %}
-
-                    <div class="work-card-shade pointer-events-none absolute inset-0"></div>
-                    <span class="pointer-events-none absolute right-4 top-4 text-[11px] font-light uppercase tracking-[0.24em] text-white/45">
-                        0{{ forloop.counter }}
-                    </span>
-                </div>
-
-                <div class="mt-4">
-                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-                        {% include 'partials/project_badges.html' %}
-                    </div>
-                    <h3 class="mt-2 text-2xl font-normal tracking-tight transition-colors duration-300 group-hover:text-white md:text-[1.75rem]">
-                        {{ project.title }}
-                    </h3>
-                    <p class="mt-2 line-clamp-2 font-light leading-relaxed text-white/45 text-sm md:text-[0.95rem]">
-                        {{ project.tagline }}
-                    </p>
-                </div>
-            </a>
-        </article>
-        {% endwith %}
+        {% include 'partials/work_card.html' with slot_number=project.homepage_slot heading_tag='h3' %}
         {% empty %}
         {% include 'partials/works_empty_state.html' with full_width=True title="Nothing featured yet" %}
         {% endfor %}

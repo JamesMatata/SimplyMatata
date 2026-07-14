@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.utils.html import strip_tags
 
 from .details import build_details_from_form, normalize_details
+from .media_utils import media_file_url
 from .models import AnonymousComment, Project, ProjectMedia
 
 
@@ -129,4 +130,36 @@ class ProjectAdminForm(forms.ModelForm):
                 'format': 'Series format is only available for Film, Comic, and Advertising projects.',
             })
 
+        homepage_slot = cleaned_data.get('homepage_slot')
+        if homepage_slot is not None:
+            if not cleaned_data.get('is_published'):
+                raise ValidationError({
+                    'homepage_slot': 'Only published projects can appear on the homepage.',
+                })
+
+            conflict = Project.objects.filter(homepage_slot=homepage_slot)
+            if self.instance.pk:
+                conflict = conflict.exclude(pk=self.instance.pk)
+            if conflict.exists():
+                raise ValidationError({
+                    'homepage_slot': f'Homepage slot {homepage_slot} is already assigned to another project.',
+                })
+
+        if not self._cover_image_provided('thumbnail', cleaned_data) and not self._cover_image_provided(
+            'featured_image', cleaned_data
+        ):
+            raise ValidationError(
+                'Provide at least one cover image: card thumbnail (4:5) and/or detail cover (16:9 for film).'
+            )
+
         return cleaned_data
+
+    def _cover_image_provided(self, field_name, cleaned_data):
+        value = cleaned_data.get(field_name)
+        if value is False:
+            return False
+        if value:
+            return True
+        if self.instance.pk:
+            return bool(media_file_url(getattr(self.instance, field_name, None)))
+        return False

@@ -41,18 +41,33 @@ class Project(models.Model):
         upload_to='projects/thumbnails/',
         blank=True,
         validators=[validate_image_upload],
-        help_text='Card cover shown before video hover. For comics, use the cover page.',
+        help_text='Optional 4:5 card cover (1080×1350). Used on works cards and homepage.',
     )
     featured_image = models.ImageField(
         upload_to='projects/featured/',
+        blank=True,
         validators=[validate_image_upload],
+        help_text='Optional detail-page cover. Use 16:9 (1920×1080) for film and advertising; 4:5 for comics.',
     )
     details = models.JSONField(default=dict, blank=True)
     is_published = models.BooleanField(default=False)
+    homepage_slot = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        choices=[(1, 'Homepage slot 1'), (2, 'Homepage slot 2'), (3, 'Homepage slot 3')],
+        help_text='Pin this project to a homepage slot. Each slot can only hold one project.',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['homepage_slot'],
+                condition=models.Q(homepage_slot__isnull=False),
+                name='unique_homepage_slot',
+            ),
+        ]
 
     def __str__(self):
         return self.title
@@ -180,9 +195,27 @@ class Project(models.Model):
 
     @property
     def card_thumbnail(self):
-        if self.thumbnail:
+        if media_file_url(self.thumbnail):
             return self.thumbnail
-        return self.featured_image
+        if media_file_url(self.featured_image):
+            return self.featured_image
+        return None
+
+    @property
+    def hero_image(self):
+        if media_file_url(self.featured_image):
+            return self.featured_image
+        if media_file_url(self.thumbnail):
+            return self.thumbnail
+        return None
+
+    @property
+    def has_wide_hero(self):
+        return self.is_video_story and bool(media_file_url(self.featured_image))
+
+    @property
+    def hero_poster(self):
+        return self.hero_image or self.card_thumbnail
 
     @property
     def track(self):
@@ -196,11 +229,15 @@ class Project(models.Model):
 
     @property
     def card_thumbnail_url(self):
-        return media_file_url(self.card_thumbnail) or media_file_url(self.featured_image)
+        return media_file_url(self.card_thumbnail)
+
+    @property
+    def hero_image_url(self):
+        return media_file_url(self.hero_image)
 
     @property
     def featured_image_url(self):
-        return media_file_url(self.featured_image)
+        return media_file_url(self.featured_image) or media_file_url(self.thumbnail)
 
     @property
     def description(self):
@@ -287,6 +324,13 @@ class Project(models.Model):
             return ''
         return self.format_label
 
+    def clean(self):
+        super().clean()
+        if not media_file_url(self.thumbnail) and not media_file_url(self.featured_image):
+            raise ValidationError(
+                'Provide at least one cover image: a 4:5 card thumbnail and/or a detail-page cover.'
+            )
+
 
 class SeriesEpisode(models.Model):
     project = models.ForeignKey(
@@ -301,10 +345,13 @@ class SeriesEpisode(models.Model):
         upload_to='projects/episodes/thumbnails/',
         blank=True,
         validators=[validate_image_upload],
+        help_text='Optional 4:5 card cover for episode cards.',
     )
     featured_image = models.ImageField(
         upload_to='projects/episodes/featured/',
+        blank=True,
         validators=[validate_image_upload],
+        help_text='Optional detail cover. Use 16:9 for film/ad episodes; 4:5 for comics.',
     )
 
     class Meta:
@@ -325,9 +372,27 @@ class SeriesEpisode(models.Model):
 
     @property
     def card_thumbnail(self):
-        if self.thumbnail:
+        if media_file_url(self.thumbnail):
             return self.thumbnail
-        return self.featured_image
+        if media_file_url(self.featured_image):
+            return self.featured_image
+        return None
+
+    @property
+    def hero_image(self):
+        if media_file_url(self.featured_image):
+            return self.featured_image
+        if media_file_url(self.thumbnail):
+            return self.thumbnail
+        return None
+
+    @property
+    def has_wide_hero(self):
+        return self.project.is_video_story and bool(media_file_url(self.featured_image))
+
+    @property
+    def hero_poster(self):
+        return self.hero_image or self.card_thumbnail
 
     @property
     def card_thumbnail_url(self):
@@ -351,6 +416,13 @@ class SeriesEpisode(models.Model):
     @property
     def show_comic_reader(self):
         return self.project.is_comic and self.comic_page_count > 0
+
+    def clean(self):
+        super().clean()
+        if not media_file_url(self.thumbnail) and not media_file_url(self.featured_image):
+            raise ValidationError(
+                'Provide at least one cover image: a 4:5 card thumbnail and/or a detail-page cover.'
+            )
 
 
 class ProjectMedia(models.Model):

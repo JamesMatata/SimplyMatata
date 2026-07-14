@@ -6,9 +6,10 @@ from works.models import Project
 
 def index(request):
     featured_projects = (
-        Project.objects.filter(is_published=True)
+        Project.objects.filter(is_published=True, homepage_slot__isnull=False)
         .prefetch_related('media')
-        .annotate(_episode_count=Count('episodes', distinct=True))[:3]
+        .annotate(_episode_count=Count('episodes', distinct=True))
+        .order_by('homepage_slot')[:3]
     )
     return render(request, 'index.html', {
         'featured_projects': featured_projects,

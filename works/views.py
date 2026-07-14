@@ -106,9 +106,9 @@ def project_detail(request, slug):
         seo_description = project.overview.strip()[:300]
 
     seo_og_image = ''
-    featured_image_url = media_file_url(project.featured_image)
-    if featured_image_url:
-        seo_og_image = request.build_absolute_uri(featured_image_url)
+    og_image_url = project.hero_image_url or project.card_thumbnail_url
+    if og_image_url:
+        seo_og_image = request.build_absolute_uri(og_image_url)
 
     return render(request, 'project_detail.html', {
         'project': project,

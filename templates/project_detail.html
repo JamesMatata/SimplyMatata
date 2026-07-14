@@ -60,13 +60,8 @@
     .gallery-item:focus-within .gallery-item-caption {
         transform: translateY(0);
     }
-    .comic-cover-frame {
-        max-width: 14rem;
-    }
-    @media (min-width: 640px) {
-        .comic-cover-frame {
-            max-width: 16rem;
-        }
+    .project-cover-frame {
+        max-width: 100%;
     }
     .comic-nav-btn {
         display: inline-flex;
@@ -266,9 +261,10 @@
             {% endif %}
         </header>
 
-        {% with video_media=project.featured_video %}
+        {% with video_media=project.featured_video hero_url=project.hero_image|media_url poster_url=project.hero_poster|media_url %}
+        {% if hero_url or video_media %}
         <div
-            class="project-hero-media mt-12 overflow-hidden rounded-lg border border-white/10{% if project.is_comic and project.show_comic_reader %} comic-cover-frame cursor-pointer group{% elif project.is_comic %} comic-cover-frame{% endif %}"
+            class="project-hero-media project-cover-frame mt-12 overflow-hidden rounded-lg border border-white/10{% if project.is_comic and project.show_comic_reader %} cursor-pointer group{% endif %}"
             {% if video_media and not project.is_series %}
             x-data="projectHeroVideo(true)"
             {% elif project.is_comic and project.show_comic_reader %}
@@ -281,15 +277,15 @@
             {% endif %}
         >
             <div
-                class="project-hero-frame {% if project.is_comic %}aspect-[2/3]{% else %}aspect-[16/9]{% endif %} {% if video_media %}has-video cursor-pointer{% else %}is-image-only{% endif %}{% if project.is_comic and project.show_comic_reader and not video_media %} relative{% endif %}"
+                class="project-hero-frame {% if project.has_wide_hero %}aspect-[16/9]{% else %}aspect-[4/5]{% endif %} {% if project.is_comic %}is-comic-cover{% endif %} {% if video_media %}has-video cursor-pointer{% else %}is-image-only{% endif %}{% if project.is_comic and project.show_comic_reader and not video_media %} relative{% endif %}"
                 {% if video_media %}
                 :class="{ 'is-hovering': hovering, 'is-playing': playing, 'is-pinned': pinned }"
                 @mouseenter="onEnter()"
                 @mouseleave="onLeave()"
                 {% if project.is_video_story %}
-                @click="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ project.card_thumbnail|media_url|escapejs }}' })"
-                @keydown.enter.prevent="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ project.card_thumbnail|media_url|escapejs }}' })"
-                @keydown.space.prevent="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ project.card_thumbnail|media_url|escapejs }}' })"
+                @click="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ poster_url|escapejs }}' })"
+                @keydown.enter.prevent="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ poster_url|escapejs }}' })"
+                @keydown.space.prevent="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ poster_url|escapejs }}' })"
                 role="button"
                 tabindex="0"
                 aria-label="Watch"
@@ -303,11 +299,13 @@
                 {% endif %}
                 {% endif %}
             >
+                {% if hero_url %}
                 <img
-                    src="{% if video_media %}{{ project.card_thumbnail|media_url }}{% else %}{{ project.featured_image|media_url }}{% endif %}"
+                    src="{{ hero_url }}"
                     alt="{{ project.title }}"
-                    class="project-hero-poster h-full w-full object-cover{% if video_media %} absolute inset-0{% endif %}"
+                    class="project-hero-poster h-full w-full {% if project.is_comic %}object-contain{% else %}object-cover{% endif %}{% if video_media %} absolute inset-0{% endif %}"
                 >
+                {% endif %}
 
                 {% if video_media %}
                 <video
@@ -325,7 +323,7 @@
                 {% if project.is_video_story %}
                 <button
                     type="button"
-                    @click.stop="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ project.card_thumbnail|media_url|escapejs }}' })"
+                    @click.stop="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ poster_url|escapejs }}' })"
                     aria-label="Watch"
                     class="project-hero-control absolute bottom-4 left-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/60 px-4 py-2 text-[11px] font-light uppercase tracking-[0.22em] text-white backdrop-blur-md hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black"
                 >
@@ -352,6 +350,7 @@
                 {% endif %}
             </div>
         </div>
+        {% endif %}
         {% endwith %}
 
         {% if project.has_about_content %}

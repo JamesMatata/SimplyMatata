@@ -26,11 +26,11 @@
             @click="openAt({{ forloop.counter0 }})"
             class="comic-thumb group relative overflow-hidden rounded-lg border border-white/10 bg-[#111111] text-left transition-colors duration-300 hover:border-[#f5c518]/45 focus:outline-none focus-visible:border-[#f5c518]"
         >
-            <div class="aspect-[2/3] overflow-hidden">
+            <div class="aspect-[4/5] overflow-hidden{% if project.is_comic %} bg-[#111111]{% endif %}">
                 <img
                     src="{{ page.image|media_url }}"
                     alt="{{ project.title }} — page {{ page.page_number }}"
-                    class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    class="h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.03]"
                     loading="lazy"
                     decoding="async"
                 >

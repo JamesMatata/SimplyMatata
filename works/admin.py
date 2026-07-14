@@ -67,11 +67,12 @@ class ProjectAdmin(admin.ModelAdmin):
         'title',
         'category',
         'format',
+        'homepage_slot',
         'is_published',
         'media_summary',
         'created_at',
     )
-    list_filter = ('category', 'format', 'is_published')
+    list_filter = ('category', 'format', 'is_published', 'homepage_slot')
     list_editable = ('is_published',)
     search_fields = ('title', 'tagline', 'slug')
     prepopulated_fields = {'slug': ('title',)}
@@ -79,6 +80,9 @@ class ProjectAdmin(admin.ModelAdmin):
     ordering = ('-created_at',)
     date_hierarchy = 'created_at'
     save_on_top = True
+
+    class Media:
+        js = ('js/admin-project-form.js',)
 
     @admin.display(description='Media')
     def media_summary(self, obj):
@@ -139,6 +143,7 @@ class ProjectAdmin(admin.ModelAdmin):
                     'category',
                     'tagline',
                     'is_published',
+                    'homepage_slot',
                     'created_at',
                 ),
             }),
@@ -167,8 +172,9 @@ class ProjectAdmin(admin.ModelAdmin):
             ('Cover art', {
                 'fields': ('thumbnail', 'featured_image'),
                 'description': (
-                    'Featured image is required. Thumbnail is optional and used on cards; '
-                    'if empty, the featured image is used.'
+                    'Card thumbnail: 4:5 portrait (1080×1350) for works cards and homepage. '
+                    'Detail cover: 16:9 (1920×1080) for film/ad project pages, or 4:5 for comics. '
+                    'Provide at least one — if only one is uploaded, it is reused everywhere.'
                 ),
             }),
             ('About this project (optional)', {
@@ -182,8 +188,7 @@ class ProjectAdmin(admin.ModelAdmin):
                 ),
                 'classes': ('collapse',),
                 'description': (
-                    'All fields here are optional. Leave them blank if you only need '
-                    'title, tagline, cover art, and media.'
+                    'Optional project details. Which fields apply depends on the category selected above.'
                 ),
             }),
         ])
@@ -209,6 +214,20 @@ class ProjectAdmin(admin.ModelAdmin):
             formfield.help_text = (
                 'Single = one film or ad with video on this page. '
                 'Series = multiple episodes/cuts managed below.'
+            )
+        if db_field.name == 'thumbnail':
+            formfield.help_text = (
+                '4:5 card cover (1080×1350). Shown on works cards and homepage.'
+            )
+        if db_field.name == 'featured_image':
+            formfield.help_text = (
+                'Detail-page cover. 16:9 (1920×1080) for film and advertising; 4:5 for comics. '
+                'Only shown on the project page when uploaded.'
+            )
+        if db_field.name == 'homepage_slot':
+            formfield.help_text = (
+                'Choose slot 1, 2, or 3 to feature this project on the homepage. '
+                'Leave blank to hide it from Selected Works.'
             )
         return formfield
 
@@ -248,6 +267,10 @@ class SeriesEpisodeAdmin(admin.ModelAdmin):
         }),
         ('Cover art', {
             'fields': ('thumbnail', 'featured_image'),
+            'description': (
+                'Card thumbnail: 4:5 for episode cards. Detail cover: 16:9 for film/ad episodes. '
+                'Provide at least one — the other is reused as a fallback.'
+            ),
         }),
     )
 

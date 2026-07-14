@@ -27,7 +27,7 @@
                 controls
                 playsinline
                 preload="metadata"
-                {% if project.card_thumbnail|media_url %}poster="{{ project.card_thumbnail|media_url }}"{% endif %}
+                {% if project.hero_poster|media_url %}poster="{{ project.hero_poster|media_url }}"{% endif %}
             >
                 <source src="{{ item.media_file|media_url }}">
             </video>
