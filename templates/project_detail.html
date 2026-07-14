@@ -192,10 +192,10 @@
         box-sizing: border-box;
         height: 100%;
     }
-    /* Portrait: icon dock at the bottom */
+    /* Portrait: icon dock at the bottom — always above the video/iframe */
     .film-player-chrome {
         position: absolute;
-        z-index: 20;
+        z-index: 40;
         left: 0;
         right: 0;
         bottom: 0;
@@ -205,19 +205,14 @@
         gap: 1rem;
         padding: 0.75rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
         background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.45) 55%, transparent 100%);
-        transition: opacity 0.3s ease, visibility 0.3s ease;
     }
     .film-player-chrome.is-shown {
         opacity: 1;
         visibility: visible;
-        pointer-events: auto;
-    }
-    .film-player-chrome.is-hidden {
-        opacity: 0;
-        visibility: hidden;
         pointer-events: none;
     }
     .film-chrome-btn {
+        pointer-events: auto;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -225,9 +220,10 @@
         height: 2.75rem;
         border-radius: 9999px;
         border: 1px solid rgba(255, 255, 255, 0.18);
-        background: rgba(12, 12, 12, 0.82);
+        background: rgba(12, 12, 12, 0.9);
         color: rgba(255, 255, 255, 0.92);
         backdrop-filter: blur(12px);
+        -webkit-tap-highlight-color: transparent;
         transition:
             border-color 0.25s ease,
             color 0.25s ease,
@@ -245,15 +241,9 @@
     @media (orientation: landscape) {
         .film-player-chrome {
             inset: 0;
-            bottom: 0;
-            left: 0;
-            right: 0;
             display: block;
             padding: 0;
             background: transparent;
-            pointer-events: none;
-        }
-        .film-player-chrome.is-shown {
             pointer-events: none;
         }
         .film-chrome-btn {
@@ -263,6 +253,7 @@
             pointer-events: auto;
             width: 2.85rem;
             height: 2.85rem;
+            z-index: 41;
         }
         .film-chrome-btn--fs {
             left: max(0.75rem, env(safe-area-inset-left, 0px));
@@ -817,17 +808,17 @@ function filmPlayer() {
             return !!(stage && active === stage);
         },
         syncFullscreenState() {
-            const wasOurs = this.isFullscreen;
             this.isFullscreen = this.isOurFullscreen();
-            if (wasOurs && !this.isFullscreen) {
-                this.unlockOrientation();
-            }
             if (!this.isFullscreen) {
                 this.unlockOrientation();
             }
         },
         openFilm(detail) {
             if (!detail) return;
+            // Clear any leftover foreign fullscreen before opening
+            if (this.getFullscreenElement()) {
+                this.exitAnyFullscreen();
+            }
             this.src = detail.src || '';
             this.youtube = detail.youtube || '';
             this.title = detail.title || '';
@@ -848,9 +839,12 @@ function filmPlayer() {
         closeFilm() {
             const video = this.$refs.video;
             if (video) {
-                video.pause();
+                try { video.pause(); } catch (e) {}
             }
             this.exitOurFullscreen();
+            if (this.getFullscreenElement()) {
+                this.exitAnyFullscreen();
+            }
             this.unlockOrientation();
             this.releaseFocusTrap();
             this.open = false;
@@ -858,6 +852,7 @@ function filmPlayer() {
             this.youtube = '';
             this.isFullscreen = false;
             document.body.style.overflow = '';
+            document.body.classList.remove('immersive-modal-open');
         },
         activateFocusTrap() {
             this.releaseFocusTrap();
