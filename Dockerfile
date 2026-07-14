@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libpq5 \
+    && apt-get install -y --no-install-recommends libpq5 gosu \
     && rm -rf /var/lib/apt/lists/* \
     && addgroup --system app \
     && adduser --system --ingroup app --home /app app
@@ -20,8 +20,6 @@ COPY . .
 RUN python manage.py collectstatic --noinput \
     && chmod +x /app/docker/entrypoint.sh \
     && chown -R app:app /app
-
-USER app
 
 EXPOSE 8000
 
