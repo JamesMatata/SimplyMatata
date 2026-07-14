@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .forms import ProjectAdminForm
+from .forms import ProjectAdminForm, ProjectMediaForm
 from .models import AnonymousComment, ComicPage, Project, ProjectMedia, SeriesEpisode
 
 admin.site.site_header = 'SimplyMatata'
@@ -11,6 +11,7 @@ admin.site.index_title = 'Manage projects and content'
 
 class ProjectMediaInline(admin.TabularInline):
     model = ProjectMedia
+    form = ProjectMediaForm
     extra = 1
     fields = ('media_file', 'youtube_url', 'caption', 'sort_order')
     ordering = ('sort_order', 'id')
@@ -41,6 +42,7 @@ class SeriesEpisodeInline(admin.TabularInline):
 
 class EpisodeMediaInline(admin.TabularInline):
     model = ProjectMedia
+    form = ProjectMediaForm
     extra = 1
     fields = ('media_file', 'youtube_url', 'caption', 'sort_order')
     fk_name = 'episode'
@@ -169,9 +171,20 @@ class ProjectAdmin(admin.ModelAdmin):
                     'if empty, the featured image is used.'
                 ),
             }),
-            ('Content', {
-                'fields': ('details',),
+            ('About this project (optional)', {
+                'fields': (
+                    'overview',
+                    'additional',
+                    'tools',
+                    'meta_year',
+                    'meta_role',
+                    'meta_client',
+                ),
                 'classes': ('collapse',),
+                'description': (
+                    'All fields here are optional. Leave them blank if you only need '
+                    'title, tagline, cover art, and media.'
+                ),
             }),
         ])
 
@@ -190,11 +203,6 @@ class ProjectAdmin(admin.ModelAdmin):
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
-        if db_field.name == 'details':
-            formfield.help_text = (
-                'JSON content. Keys: overview, highlights [{label, value}], '
-                'additional, tools [strings], meta {year, role, client}.'
-            )
         if db_field.name == 'delivery_formats':
             formfield.help_text = 'Comma-separated, e.g. YouTube, TV, Reels.'
         if db_field.name == 'format':
@@ -272,6 +280,7 @@ class ComicPageAdmin(admin.ModelAdmin):
 
 @admin.register(ProjectMedia)
 class ProjectMediaAdmin(admin.ModelAdmin):
+    form = ProjectMediaForm
     list_display = ('project', 'episode', 'media_type', 'caption', 'sort_order')
     list_filter = ('project__category',)
     search_fields = ('project__title', 'episode__title', 'caption')

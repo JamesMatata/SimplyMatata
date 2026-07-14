@@ -4,6 +4,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.text import slugify
 
+from .details import normalize_details
+from .media_utils import media_file_url
 from .validators import validate_image_upload, validate_media_upload
 
 
@@ -58,6 +60,7 @@ class Project(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
+        self.details = normalize_details(self.details)
         super().save(*args, **kwargs)
 
     @property
@@ -188,17 +191,30 @@ class Project(models.Model):
         return 'storytelling'
 
     @property
+    def safe_details(self):
+        return normalize_details(self.details)
+
+    @property
+    def card_thumbnail_url(self):
+        return media_file_url(self.card_thumbnail) or media_file_url(self.featured_image)
+
+    @property
+    def featured_image_url(self):
+        return media_file_url(self.featured_image)
+
+    @property
     def description(self):
-        return self.details.get('description', '').strip()
+        value = self.safe_details.get('description', '')
+        return value.strip() if isinstance(value, str) else ''
 
     @property
     def overview(self):
-        value = self.details.get('overview') or self.details.get('description') or ''
+        value = self.safe_details.get('overview') or self.safe_details.get('description') or ''
         return value.strip() if isinstance(value, str) else ''
 
     @property
     def highlights(self):
-        items = self.details.get('highlights', [])
+        items = self.safe_details.get('highlights', [])
         if not isinstance(items, list):
             return []
         highlights = []
@@ -213,12 +229,12 @@ class Project(models.Model):
 
     @property
     def additional_notes(self):
-        value = self.details.get('additional', '')
+        value = self.safe_details.get('additional', '')
         return value.strip() if isinstance(value, str) else ''
 
     @property
     def tools(self):
-        items = self.details.get('tools', [])
+        items = self.safe_details.get('tools', [])
         if isinstance(items, str):
             return [part.strip() for part in items.split(',') if part.strip()]
         if not isinstance(items, list):
@@ -239,7 +255,7 @@ class Project(models.Model):
 
     @property
     def meta(self):
-        value = self.details.get('meta', {})
+        value = self.safe_details.get('meta', {})
         return value if isinstance(value, dict) else {}
 
     @property
@@ -314,6 +330,10 @@ class SeriesEpisode(models.Model):
         return self.featured_image
 
     @property
+    def card_thumbnail_url(self):
+        return media_file_url(self.card_thumbnail)
+
+    @property
     def featured_video(self):
         for item in self.media.all():
             if item.is_video:
@@ -369,15 +389,27 @@ class ProjectMedia(models.Model):
     def is_video(self):
         if not self.media_file:
             return False
-        extension = self.media_file.name.rsplit('.', 1)[-1].lower()
-        return f'.{extension}' in self.VIDEO_EXTENSIONS
+        try:
+            name = self.media_file.name or ''
+            if '.' not in name:
+                return False
+            extension = name.rsplit('.', 1)[-1].lower()
+            return f'.{extension}' in self.VIDEO_EXTENSIONS
+        except (AttributeError, IndexError):
+            return False
 
     @property
     def is_image(self):
         if not self.media_file:
             return False
-        extension = self.media_file.name.rsplit('.', 1)[-1].lower()
-        return extension in {'jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'}
+        try:
+            name = self.media_file.name or ''
+            if '.' not in name:
+                return False
+            extension = name.rsplit('.', 1)[-1].lower()
+            return extension in {'jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'}
+        except (AttributeError, IndexError):
+            return False
 
     @property
     def youtube_embed_url(self):
@@ -396,12 +428,14 @@ class ProjectMedia(models.Model):
         return f'https://www.youtube.com/embed/{video_id}'
 
     def clean(self):
-        has_file = bool(self.media_file)
-        has_youtube = bool(self.youtube_url)
+        has_file = bool(self.media_file and getattr(self.media_file, 'name', ''))
+        has_youtube = bool((self.youtube_url or '').strip())
+        if not has_file and not has_youtube:
+            if not self.pk:
+                return
+            raise ValidationError('Either a media file or a YouTube URL is required.')
         if has_file and has_youtube:
             raise ValidationError('Provide either a media file or a YouTube URL, not both.')
-        if not has_file and not has_youtube:
-            raise ValidationError('Either a media file or a YouTube URL is required.')
 
 
 class ComicPage(models.Model):

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load seo_tags %}
+{% load seo_tags project_extras %}
 
 {% block structured_data %}
 <script type="application/ld+json">
@@ -287,9 +287,9 @@
                 @mouseenter="onEnter()"
                 @mouseleave="onLeave()"
                 {% if project.is_video_story %}
-                @click="$dispatch('open-film', { src: '{{ video_media.media_file.url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ project.card_thumbnail.url|escapejs }}' })"
-                @keydown.enter.prevent="$dispatch('open-film', { src: '{{ video_media.media_file.url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ project.card_thumbnail.url|escapejs }}' })"
-                @keydown.space.prevent="$dispatch('open-film', { src: '{{ video_media.media_file.url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ project.card_thumbnail.url|escapejs }}' })"
+                @click="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ project.card_thumbnail|media_url|escapejs }}' })"
+                @keydown.enter.prevent="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ project.card_thumbnail|media_url|escapejs }}' })"
+                @keydown.space.prevent="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ project.card_thumbnail|media_url|escapejs }}' })"
                 role="button"
                 tabindex="0"
                 aria-label="Watch"
@@ -304,7 +304,7 @@
                 {% endif %}
             >
                 <img
-                    src="{% if video_media %}{{ project.card_thumbnail.url }}{% else %}{{ project.featured_image.url }}{% endif %}"
+                    src="{% if video_media %}{{ project.card_thumbnail|media_url }}{% else %}{{ project.featured_image|media_url }}{% endif %}"
                     alt="{{ project.title }}"
                     class="project-hero-poster h-full w-full object-cover{% if video_media %} absolute inset-0{% endif %}"
                 >
@@ -314,7 +314,7 @@
                     x-ref="video"
                     class="project-hero-video absolute inset-0 h-full w-full object-cover opacity-0"
                     :class="{ 'opacity-100': playing }"
-                    src="{{ video_media.media_file.url }}"
+                    src="{{ video_media.media_file|media_url }}"
                     muted
                     loop
                     playsinline
@@ -325,7 +325,7 @@
                 {% if project.is_video_story %}
                 <button
                     type="button"
-                    @click.stop="$dispatch('open-film', { src: '{{ video_media.media_file.url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ project.card_thumbnail.url|escapejs }}' })"
+                    @click.stop="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ project.card_thumbnail|media_url|escapejs }}' })"
                     aria-label="Watch"
                     class="project-hero-control absolute bottom-4 left-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/60 px-4 py-2 text-[11px] font-light uppercase tracking-[0.22em] text-white backdrop-blur-md hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black"
                 >

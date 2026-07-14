@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .forms import AnonymousCommentForm
+from .media_utils import media_file_url
 from .models import AnonymousComment, ComicPage, Project, SeriesEpisode
 from .utils import get_client_ip
 
@@ -25,23 +26,29 @@ def is_rate_limited(ip_address):
 
 
 def _comic_pages_payload(pages):
-    return [
-        {
+    payload = []
+    for page in pages:
+        image_url = media_file_url(page.image)
+        if not image_url:
+            continue
+        payload.append({
             'number': page.page_number,
-            'image': page.image.url,
-        }
-        for page in pages
-    ]
+            'image': image_url,
+        })
+    return payload
 
 
 def _series_episodes_payload(episodes):
     payload = []
     for episode in episodes:
+        cover_url = media_file_url(episode.card_thumbnail)
+        if not cover_url:
+            continue
         item = {
             'number': episode.number,
             'title': episode.title,
-            'tagline': episode.tagline,
-            'cover': episode.card_thumbnail.url,
+            'tagline': episode.tagline or '',
+            'cover': cover_url,
             'page_count': episode.comic_page_count,
             'has_video': episode.has_featured_video,
         }
@@ -99,8 +106,9 @@ def project_detail(request, slug):
         seo_description = project.overview.strip()[:300]
 
     seo_og_image = ''
-    if project.featured_image:
-        seo_og_image = request.build_absolute_uri(project.featured_image.url)
+    featured_image_url = media_file_url(project.featured_image)
+    if featured_image_url:
+        seo_og_image = request.build_absolute_uri(featured_image_url)
 
     return render(request, 'project_detail.html', {
         'project': project,

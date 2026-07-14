@@ -1,3 +1,4 @@
+{% load project_extras %}
 {% if project.show_episodes %}
 <section
     id="series-episodes"
@@ -37,7 +38,7 @@
             {% elif project.is_video_story and video_media %}
             <button
                 type="button"
-                @click="$dispatch('open-film', { src: '{{ video_media.media_file.url|escapejs }}', title: '{{ episode.title|escapejs }}', poster: '{{ episode.card_thumbnail.url|escapejs }}' })"
+                @click="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ episode.title|escapejs }}', poster: '{{ episode.card_thumbnail|media_url|escapejs }}' })"
                 class="block w-full overflow-hidden rounded-lg border border-white/10 bg-[#111111] text-left transition-colors duration-300 hover:border-[#f5c518]/45 focus:outline-none focus-visible:border-[#f5c518]"
             >
             {% else %}
@@ -52,7 +53,7 @@
                     {% endif %}
                 >
                     <img
-                        src="{{ episode.card_thumbnail.url }}"
+                        src="{{ episode.card_thumbnail|media_url }}"
                         alt="{{ episode.title }}"
                         class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                         loading="lazy"
@@ -64,7 +65,7 @@
                         x-ref="video"
                         class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-300"
                         :class="{ 'opacity-100': playing }"
-                        src="{{ video_media.media_file.url }}"
+                        src="{{ video_media.media_file|media_url }}"
                         muted
                         loop
                         playsinline

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static project_extras %}
 
 {% block body_class %}home-hero-light{% endblock %}
 
@@ -194,7 +194,7 @@
                             @mouseleave="onLeave()"
                         >
                             <img
-                                src="{{ project.card_thumbnail.url }}"
+                                src="{{ project.card_thumbnail|media_url }}"
                                 alt="{{ project.title }}"
                                 class="work-card-poster absolute inset-0 h-full w-full object-cover"
                             >
@@ -204,7 +204,7 @@
                                 x-ref="video"
                                 class="work-card-video absolute inset-0 h-full w-full object-cover opacity-0"
                                 :class="{ 'opacity-100': playing }"
-                                src="{{ video_media.media_file.url }}"
+                                src="{{ video_media.media_file|media_url }}"
                                 muted
                                 loop
                                 playsinline

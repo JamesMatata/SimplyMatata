@@ -5,6 +5,8 @@ from django import template
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 
+from works.media_utils import media_file_url
+
 register = template.Library()
 
 _LINK_PATTERN = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
@@ -39,6 +41,11 @@ def _inline_markdown(text):
     safe_text = _BOLD_PATTERN.sub(r'<strong class="font-normal text-white/90">\1</strong>', safe_text)
     safe_text = _ITALIC_PATTERN.sub(r'<em>\1</em>', safe_text)
     return safe_text
+
+
+@register.filter
+def media_url(file_field):
+    return media_file_url(file_field)
 
 
 @register.filter

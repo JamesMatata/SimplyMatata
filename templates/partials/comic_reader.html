@@ -1,3 +1,4 @@
+{% load project_extras %}
 <section
     id="comic-reader"
     class="comic-reader mt-20"
@@ -19,6 +20,7 @@
 
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
         {% for page in project.comic_pages.all %}
+        {% if page.image|media_url %}
         <button
             type="button"
             @click="openAt({{ forloop.counter0 }})"
@@ -26,7 +28,7 @@
         >
             <div class="aspect-[2/3] overflow-hidden">
                 <img
-                    src="{{ page.image.url }}"
+                    src="{{ page.image|media_url }}"
                     alt="{{ project.title }} — page {{ page.page_number }}"
                     class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                     loading="lazy"
@@ -42,6 +44,7 @@
                 </span>
             </div>
         </button>
+        {% endif %}
         {% endfor %}
     </div>
 
