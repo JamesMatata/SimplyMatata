@@ -13,7 +13,7 @@
         x-transition:leave="transition-opacity duration-200 ease-in"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class="film-player-modal fixed inset-0 z-[45] overflow-hidden bg-black"
+        class="film-player-modal fixed z-[45] overflow-hidden bg-black"
         :class="{ 'is-fullscreen': isFullscreen, 'controls-visible': controlsVisible }"
         x-effect="document.body.classList.toggle('immersive-modal-open', open)"
         role="dialog"
@@ -23,7 +23,7 @@
         @mousemove="revealControls()"
         @touchstart.passive="revealControls()"
     >
-        <div class="film-player-stage relative flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden">
+        <div class="film-player-stage relative flex h-full w-full flex-col overflow-hidden">
             <div class="film-player-media relative min-h-0 flex-1 overflow-hidden">
                 <video
                     x-ref="video"
