@@ -61,7 +61,26 @@
         transform: translateY(0);
     }
     .project-cover-frame {
-        max-width: 100%;
+        width: 100%;
+    }
+    .project-cover-frame.is-portrait {
+        max-width: 13rem;
+    }
+    .project-cover-frame.is-wide {
+        max-width: 36rem;
+    }
+    @media (min-width: 640px) {
+        .project-cover-frame.is-portrait {
+            max-width: 15rem;
+        }
+        .project-cover-frame.is-wide {
+            max-width: 42rem;
+        }
+    }
+    @media (min-width: 1024px) {
+        .project-cover-frame.is-wide {
+            max-width: 48rem;
+        }
     }
     .comic-nav-btn {
         display: inline-flex;
@@ -264,7 +283,7 @@
         {% with video_media=project.featured_video hero_url=project.hero_image|media_url poster_url=project.hero_poster|media_url %}
         {% if hero_url or video_media %}
         <div
-            class="project-hero-media project-cover-frame mt-12 overflow-hidden rounded-lg border border-white/10{% if project.is_comic and project.show_comic_reader %} cursor-pointer group{% endif %}"
+            class="project-hero-media project-cover-frame mt-12 overflow-hidden rounded-lg border border-white/10 {% if project.has_wide_hero %}is-wide{% else %}is-portrait{% endif %}{% if project.is_comic and project.show_comic_reader %} cursor-pointer group{% endif %}"
             {% if video_media and not project.is_series %}
             x-data="projectHeroVideo(true)"
             {% elif project.is_comic and project.show_comic_reader %}
