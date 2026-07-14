@@ -45,7 +45,7 @@
             <div class="overflow-hidden rounded-lg border border-white/10 bg-[#111111] transition-colors duration-300 hover:border-[#f5c518]/35">
             {% endif %}
                 <div
-                    class="series-episode-frame relative overflow-hidden {% if episode.has_wide_hero or project.is_video_story %}aspect-[16/9]{% else %}aspect-[4/5]{% endif %}{% if video_media %} has-video{% endif %}"
+                    class="series-episode-frame relative overflow-hidden aspect-[4/5]{% if video_media %} has-video{% endif %}"
                     {% if video_media and project.is_video_story %}
                     x-data="episodeCardVideo(true)"
                     @mouseenter="onEnter()"
