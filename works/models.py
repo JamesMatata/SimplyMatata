@@ -225,7 +225,8 @@ class Project(models.Model):
 
     @property
     def has_wide_hero(self):
-        return self.is_video_story and bool(media_file_url(self.featured_image))
+        """Film and advertising detail heroes are always 16:9."""
+        return self.is_video_story
 
     @property
     def hero_poster(self):
@@ -402,7 +403,8 @@ class SeriesEpisode(models.Model):
 
     @property
     def has_wide_hero(self):
-        return self.project.is_video_story and bool(media_file_url(self.featured_image))
+        """Film and advertising episode cards on detail use 16:9 when video story."""
+        return self.project.is_video_story
 
     @property
     def hero_poster(self):
