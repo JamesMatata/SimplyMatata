@@ -159,8 +159,31 @@
         height: 100%;
         background: #000;
     }
+    .film-player-stage {
+        /* Keep video + native controls below the fixed navbar */
+        padding-top: calc(4.75rem + env(safe-area-inset-top, 0px));
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        box-sizing: border-box;
+    }
+    @media (min-width: 640px) {
+        .film-player-stage {
+            padding-top: calc(5.25rem + env(safe-area-inset-top, 0px));
+        }
+    }
+    @media (min-width: 768px) {
+        .film-player-stage {
+            padding-top: calc(6.25rem + env(safe-area-inset-top, 0px));
+        }
+    }
+    .film-player-modal.is-fullscreen .film-player-stage,
+    .film-player-modal:fullscreen .film-player-stage,
+    .film-player-modal:-webkit-full-screen .film-player-stage {
+        padding-top: 0;
+        padding-bottom: 0;
+    }
     .film-player-chrome {
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.35) 55%, transparent 100%);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(5, 5, 5, 0.96);
         transition: opacity 0.35s ease, transform 0.35s ease, visibility 0.35s ease;
     }
     .film-player-chrome.is-shown {
@@ -168,12 +191,25 @@
         visibility: visible;
         transform: translateY(0);
         pointer-events: auto;
+        max-height: 5rem;
     }
     .film-player-chrome.is-hidden {
         opacity: 0;
         visibility: hidden;
-        transform: translateY(0.5rem);
+        transform: translateY(0.25rem);
         pointer-events: none;
+        max-height: 0;
+        padding: 0;
+        border: 0;
+        overflow: hidden;
+    }
+    /* Outside true fullscreen, chrome stays available so Close is never lost on mobile */
+    .film-player-modal:not(.is-fullscreen) .film-player-chrome {
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        pointer-events: auto !important;
+        max-height: 5rem !important;
     }
     body.immersive-modal-open .note-fab,
     body.immersive-modal-open .note-widget,
@@ -774,8 +810,13 @@ function filmPlayer() {
             if (this._hideTimer) {
                 window.clearTimeout(this._hideTimer);
             }
+            // Only auto-hide chrome in true fullscreen; otherwise keep Close reachable on mobile
+            if (!this.isFullscreen) {
+                this.controlsVisible = true;
+                return;
+            }
             this._hideTimer = window.setTimeout(() => {
-                if (this.open) {
+                if (this.open && this.isFullscreen) {
                     this.controlsVisible = false;
                 }
             }, HIDE_DELAY_MS);

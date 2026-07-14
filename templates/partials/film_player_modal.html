@@ -13,7 +13,7 @@
         x-transition:leave="transition-opacity duration-200 ease-in"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class="film-player-modal fixed inset-0 z-[45] bg-black"
+        class="film-player-modal fixed inset-0 z-[45] overflow-hidden bg-black"
         :class="{ 'is-fullscreen': isFullscreen, 'controls-visible': controlsVisible }"
         x-effect="document.body.classList.toggle('immersive-modal-open', open)"
         role="dialog"
@@ -23,8 +23,8 @@
         @mousemove="revealControls()"
         @touchstart.passive="revealControls()"
     >
-        <div class="film-player-stage relative flex h-[100dvh] max-h-[100dvh] w-full flex-col">
-            <div class="film-player-media relative min-h-0 flex-1">
+        <div class="film-player-stage flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden">
+            <div class="film-player-media relative min-h-0 flex-1 overflow-hidden">
                 <video
                     x-ref="video"
                     x-show="src"
@@ -49,11 +49,11 @@
             </div>
 
             <footer
-                class="film-player-chrome absolute inset-x-0 bottom-0 z-20"
-                :class="controlsVisible ? 'is-shown' : 'is-hidden'"
+                class="film-player-chrome relative z-20 w-full shrink-0"
+                :class="controlsVisible || !isFullscreen ? 'is-shown' : 'is-hidden'"
                 @pointerdown.stop="revealControls()"
             >
-                <div class="film-player-chrome-inner flex items-center justify-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-10 sm:gap-3 sm:px-6 sm:pb-8">
+                <div class="film-player-chrome-inner flex items-center justify-center gap-2 px-3 py-3 sm:gap-3 sm:px-6 sm:py-5">
                     <button
                         type="button"
                         @click="toggleFullscreen()"
