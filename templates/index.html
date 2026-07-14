@@ -313,51 +313,9 @@
 {% endblock %}
 
 {% block extra_scripts %}
+{% load static %}
+<script src="{% static 'js/work-card.js' %}"></script>
 <script>
-function workCard(hasVideo) {
-    return {
-        hasVideo: hasVideo,
-        pinned: false,
-        hovering: false,
-        playing: false,
-        get video() {
-            return this.$refs.video || null;
-        },
-        play() {
-            if (!this.video) return;
-            this.video.play().catch(function () {});
-        },
-        pause(reset) {
-            if (!this.video) return;
-            this.video.pause();
-            if (reset) {
-                this.video.currentTime = 0;
-            }
-        },
-        onEnter() {
-            this.hovering = true;
-            if (this.hasVideo && !this.pinned) {
-                this.play();
-            }
-        },
-        onLeave() {
-            this.hovering = false;
-            if (this.hasVideo && !this.pinned) {
-                this.pause(true);
-            }
-        },
-        togglePin() {
-            if (!this.hasVideo) return;
-            this.pinned = !this.pinned;
-            if (this.pinned) {
-                this.play();
-            } else {
-                this.pause(true);
-            }
-        },
-    };
-}
-
 document.addEventListener('DOMContentLoaded', function () {
     var hero = document.querySelector('.hero-stage');
     var ticking = false;

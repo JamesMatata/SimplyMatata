@@ -50,6 +50,7 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = env_int('SECURE_HSTS_SECONDS', default=31536000)
     SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=True)
     SECURE_HSTS_PRELOAD = env_bool('SECURE_HSTS_PRELOAD', default=False)
+    SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
     if USE_SECURE_PROXY:
         SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

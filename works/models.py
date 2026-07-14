@@ -5,7 +5,7 @@ from django.db import models
 from django.utils.text import slugify
 
 from .details import normalize_details
-from .media_utils import media_file_url
+from .media_utils import media_file_url, youtube_embed_url, youtube_video_id
 from .validators import validate_image_upload, validate_media_upload
 
 
@@ -79,21 +79,35 @@ class Project(models.Model):
         super().save(*args, **kwargs)
 
     @property
-    def featured_video(self):
+    def featured_media(self):
         if self.is_series:
             return None
         for item in self.media.all():
-            if item.episode_id is None and item.is_video:
+            if item.episode_id is None and item.is_playable:
                 return item
         return None
 
     @property
+    def featured_video(self):
+        return self.featured_media
+
+    @property
+    def has_inline_video(self):
+        media = self.featured_media
+        return media is not None and media.is_video
+
+    @property
+    def has_youtube_media(self):
+        media = self.featured_media
+        return media is not None and media.is_youtube
+
+    @property
     def has_featured_video(self):
-        return self.featured_video is not None
+        return self.has_inline_video or self.has_youtube_media
 
     @property
     def gallery_media(self):
-        featured = self.featured_video
+        featured = self.featured_media
         return [
             item for item in self.media.all()
             if item.episode_id is None
@@ -399,15 +413,29 @@ class SeriesEpisode(models.Model):
         return media_file_url(self.card_thumbnail)
 
     @property
-    def featured_video(self):
+    def featured_media(self):
         for item in self.media.all():
-            if item.is_video:
+            if item.is_playable:
                 return item
         return None
 
     @property
+    def featured_video(self):
+        return self.featured_media
+
+    @property
+    def has_inline_video(self):
+        media = self.featured_media
+        return media is not None and media.is_video
+
+    @property
+    def has_youtube_media(self):
+        media = self.featured_media
+        return media is not None and media.is_youtube
+
+    @property
     def has_featured_video(self):
-        return self.featured_video is not None
+        return self.has_inline_video or self.has_youtube_media
 
     @property
     def comic_page_count(self):
@@ -484,20 +512,34 @@ class ProjectMedia(models.Model):
             return False
 
     @property
+    def is_youtube(self):
+        return bool((self.youtube_url or '').strip())
+
+    @property
+    def is_playable(self):
+        return self.is_video or self.is_youtube
+
+    @property
+    def youtube_video_id(self):
+        return youtube_video_id(self.youtube_url)
+
+    @property
     def youtube_embed_url(self):
-        if not self.youtube_url:
+        if not self.is_youtube:
             return ''
-        url = self.youtube_url.strip()
-        if '/embed/' in url:
-            return url
-        video_id = ''
-        if 'youtu.be/' in url:
-            video_id = url.rsplit('youtu.be/', 1)[-1].split('?')[0]
-        elif 'v=' in url:
-            video_id = url.split('v=', 1)[-1].split('&')[0]
-        if not video_id:
-            return url
-        return f'https://www.youtube.com/embed/{video_id}'
+        return youtube_embed_url(self.youtube_url)
+
+    @property
+    def youtube_preview_embed_url(self):
+        if not self.is_youtube:
+            return ''
+        return youtube_embed_url(self.youtube_url, autoplay=True, controls=False)
+
+    @property
+    def youtube_modal_embed_url(self):
+        if not self.is_youtube:
+            return ''
+        return youtube_embed_url(self.youtube_url, autoplay=True, controls=True)
 
     def clean(self):
         has_file = bool(self.media_file and getattr(self.media_file, 'name', ''))

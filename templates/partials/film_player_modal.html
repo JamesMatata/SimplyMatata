@@ -31,6 +31,15 @@
                     playsinline
                     preload="metadata"
                 ></video>
+                <iframe
+                    x-show="youtube"
+                    :src="youtube"
+                    class="aspect-video h-auto max-h-full w-full max-w-6xl border-0 bg-black"
+                    title="Film player"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen
+                ></iframe>
             </div>
 
             <footer class="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-wrap items-center justify-center gap-3 px-6 pb-6 sm:pb-8">

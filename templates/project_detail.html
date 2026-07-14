@@ -280,12 +280,15 @@
             {% endif %}
         </header>
 
-        {% with video_media=project.featured_video hero_url=project.hero_image|media_url poster_url=project.hero_poster|media_url %}
+        {% with video_media=project.featured_media hero_url=project.hero_image|media_url poster_url=project.hero_poster|media_url %}
         {% if hero_url or video_media %}
         <div
             class="project-hero-media project-cover-frame mt-12 overflow-hidden rounded-lg border border-white/10 {% if project.has_wide_hero %}is-wide{% else %}is-portrait{% endif %}{% if project.is_comic and project.show_comic_reader %} cursor-pointer group{% endif %}"
             {% if video_media and not project.is_series %}
-            x-data="projectHeroVideo(true)"
+            x-data="projectHeroVideo({
+                inlineVideo: {{ project.has_inline_video|yesno:'true,false' }},
+                youtubePreviewUrl: '{{ video_media.youtube_preview_embed_url|default:''|escapejs }}',
+            })"
             {% elif project.is_comic and project.show_comic_reader %}
             @click="$dispatch('open-comic', { index: 0 })"
             @keydown.enter="$dispatch('open-comic', { index: 0 })"
@@ -302,9 +305,9 @@
                 @mouseenter="onEnter()"
                 @mouseleave="onLeave()"
                 {% if project.is_video_story %}
-                @click="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ poster_url|escapejs }}' })"
-                @keydown.enter.prevent="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ poster_url|escapejs }}' })"
-                @keydown.space.prevent="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ poster_url|escapejs }}' })"
+                @click="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', youtube: '{{ video_media.youtube_modal_embed_url|default:''|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ poster_url|escapejs }}' })"
+                @keydown.enter.prevent="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', youtube: '{{ video_media.youtube_modal_embed_url|default:''|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ poster_url|escapejs }}' })"
+                @keydown.space.prevent="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', youtube: '{{ video_media.youtube_modal_embed_url|default:''|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ poster_url|escapejs }}' })"
                 role="button"
                 tabindex="0"
                 aria-label="Watch"
@@ -323,26 +326,40 @@
                     src="{{ hero_url }}"
                     alt="{{ project.title }}"
                     class="project-hero-poster h-full w-full {% if project.is_comic %}object-contain{% else %}object-cover{% endif %}{% if video_media %} absolute inset-0{% endif %}"
+                    :class="{ 'opacity-0': playing && (hasInlineVideo || youtubePreviewUrl) }"
                 >
                 {% endif %}
 
                 {% if video_media %}
-                <video
-                    x-ref="video"
-                    class="project-hero-video absolute inset-0 h-full w-full object-cover opacity-0"
-                    :class="{ 'opacity-100': playing }"
-                    src="{{ video_media.media_file|media_url }}"
-                    muted
-                    loop
-                    playsinline
-                    preload="metadata"
-                    @play="playing = true"
-                    @pause="playing = false"
-                ></video>
+                    {% if video_media.is_video %}
+                    <video
+                        x-ref="video"
+                        class="project-hero-video absolute inset-0 h-full w-full object-cover opacity-0"
+                        :class="{ 'opacity-100': playing }"
+                        src="{{ video_media.media_file|media_url }}"
+                        muted
+                        loop
+                        playsinline
+                        preload="metadata"
+                        @play="playing = true"
+                        @pause="playing = false"
+                    ></video>
+                    {% elif video_media.is_youtube %}
+                    <iframe
+                        x-show="playing"
+                        :src="playing ? youtubePreviewUrl : ''"
+                        class="project-hero-video absolute inset-0 h-full w-full border-0 opacity-0"
+                        :class="{ 'opacity-100': playing }"
+                        title="{{ project.title }} preview"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen
+                    ></iframe>
+                    {% endif %}
                 {% if project.is_video_story %}
                 <button
                     type="button"
-                    @click.stop="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ poster_url|escapejs }}' })"
+                    @click.stop="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', youtube: '{{ video_media.youtube_modal_embed_url|default:''|escapejs }}', title: '{{ project.title|escapejs }}', poster: '{{ poster_url|escapejs }}' })"
                     aria-label="Watch"
                     class="project-hero-control absolute bottom-4 left-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/60 px-4 py-2 text-[11px] font-light uppercase tracking-[0.22em] text-white backdrop-blur-md hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black"
                 >
@@ -639,6 +656,7 @@ function filmPlayer() {
     return {
         open: false,
         src: '',
+        youtube: '',
         title: '',
         poster: '',
         isFullscreen: false,
@@ -652,16 +670,18 @@ function filmPlayer() {
             });
         },
         openFilm(detail) {
-            if (!detail || !detail.src) return;
-            this.src = detail.src;
+            if (!detail) return;
+            this.src = detail.src || '';
+            this.youtube = detail.youtube || '';
             this.title = detail.title || '';
             this.poster = detail.poster || '';
+            if (!this.src && !this.youtube) return;
             this.open = true;
             document.body.style.overflow = 'hidden';
             this.activateFocusTrap();
             this.$nextTick(() => {
                 const video = this.$refs.video;
-                if (video) {
+                if (video && this.src) {
                     video.currentTime = 0;
                     video.play().catch(function () {});
                 }
@@ -672,6 +692,7 @@ function filmPlayer() {
             if (video) {
                 video.pause();
             }
+            this.youtube = '';
             this.exitFullscreen();
             this.releaseFocusTrap();
             this.open = false;
@@ -739,20 +760,22 @@ function filmPlayer() {
     };
 }
 
-function projectHeroVideo(hasVideo) {
+function projectHeroVideo(options) {
+    options = options || {};
     return {
-        hasVideo: hasVideo,
+        hasInlineVideo: !!options.inlineVideo,
+        youtubePreviewUrl: options.youtubePreviewUrl || '',
         pinned: false,
         hovering: false,
         playing: false,
         get video() {
             return this.$refs.video || null;
         },
-        play() {
+        playInline() {
             if (!this.video) return;
             this.video.play().catch(function () {});
         },
-        pause(reset) {
+        pauseInline(reset) {
             if (!this.video) return;
             this.video.pause();
             if (reset) {
@@ -761,23 +784,33 @@ function projectHeroVideo(hasVideo) {
         },
         onEnter() {
             this.hovering = true;
-            if (this.hasVideo && !this.pinned) {
-                this.play();
+            if (this.pinned) return;
+            if (this.hasInlineVideo) {
+                this.playInline();
+                return;
+            }
+            if (this.youtubePreviewUrl) {
+                this.playing = true;
             }
         },
         onLeave() {
             this.hovering = false;
-            if (this.hasVideo && !this.pinned) {
-                this.pause(true);
+            if (this.pinned) return;
+            if (this.hasInlineVideo) {
+                this.pauseInline(true);
+                return;
+            }
+            if (this.youtubePreviewUrl) {
+                this.playing = false;
             }
         },
         togglePin() {
-            if (!this.hasVideo) return;
+            if (!this.hasInlineVideo) return;
             this.pinned = !this.pinned;
             if (this.pinned) {
-                this.play();
+                this.playInline();
             } else {
-                this.pause(true);
+                this.pauseInline(true);
             }
         },
     };

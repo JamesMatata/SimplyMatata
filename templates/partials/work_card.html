@@ -1,7 +1,10 @@
 {% load project_extras %}
-{% with video_media=project.featured_video %}
+{% with video_media=project.featured_media %}
 <article
-    x-data="workCard({{ project.has_featured_video|yesno:'true,false' }})"
+    x-data="workCard({
+        inlineVideo: {{ project.has_inline_video|yesno:'true,false' }},
+        youtubePreviewUrl: '{{ video_media.youtube_preview_embed_url|default:''|escapejs }}',
+    })"
     class="work-card group"
 >
     <a href="{% url 'project_detail' project.slug %}" class="block">
@@ -16,29 +19,43 @@
                 src="{{ project.card_thumbnail|media_url }}"
                 alt="{{ project.title }}"
                 class="work-card-poster absolute inset-0 h-full w-full {% if project.is_comic %}object-contain{% else %}object-cover{% endif %}"
+                :class="{ 'opacity-0': playing && (hasInlineVideo || youtubePreviewUrl) }"
             >
             {% endif %}
             {% if video_media %}
-            <video
-                x-ref="video"
-                class="work-card-video absolute inset-0 h-full w-full object-cover opacity-0"
-                :class="{ 'opacity-100': playing }"
-                src="{{ video_media.media_file|media_url }}"
-                muted
-                loop
-                playsinline
-                preload="metadata"
-                @play="playing = true"
-                @pause="playing = false"
-            ></video>
-            <button
-                type="button"
-                @click.prevent.stop="togglePin()"
-                :aria-label="pinned ? 'Pause video' : 'Play video'"
-                class="work-card-control absolute bottom-4 left-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/60 px-4 py-2 text-[11px] font-light uppercase tracking-[0.22em] text-white backdrop-blur-md hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black"
-            >
-                <span x-text="pinned ? 'Pause' : 'Play'"></span>
-            </button>
+                {% if video_media.is_video %}
+                <video
+                    x-ref="video"
+                    class="work-card-video absolute inset-0 h-full w-full object-cover opacity-0"
+                    :class="{ 'opacity-100': playing }"
+                    src="{{ video_media.media_file|media_url }}"
+                    muted
+                    loop
+                    playsinline
+                    preload="metadata"
+                    @play="playing = true"
+                    @pause="playing = false"
+                ></video>
+                <button
+                    type="button"
+                    @click.prevent.stop="togglePin()"
+                    :aria-label="pinned ? 'Pause video' : 'Play video'"
+                    class="work-card-control absolute bottom-4 left-4 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/60 px-4 py-2 text-[11px] font-light uppercase tracking-[0.22em] text-white backdrop-blur-md hover:border-[#f5c518] hover:bg-[#f5c518] hover:text-black"
+                >
+                    <span x-text="pinned ? 'Pause' : 'Play'"></span>
+                </button>
+                {% elif video_media.is_youtube %}
+                <iframe
+                    x-show="playing"
+                    :src="playing ? youtubePreviewUrl : ''"
+                    class="work-card-video absolute inset-0 h-full w-full border-0 opacity-0"
+                    :class="{ 'opacity-100': playing }"
+                    title="{{ project.title }} preview"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen
+                ></iframe>
+                {% endif %}
             {% endif %}
 
             <div class="work-card-shade pointer-events-none absolute inset-0"></div>

@@ -38,7 +38,7 @@
             {% elif project.is_video_story and video_media %}
             <button
                 type="button"
-                @click="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', title: '{{ episode.title|escapejs }}', poster: '{{ episode.hero_poster|media_url|escapejs }}' })"
+                @click="$dispatch('open-film', { src: '{{ video_media.media_file|media_url|escapejs }}', youtube: '{{ video_media.youtube_modal_embed_url|default:''|escapejs }}', title: '{{ episode.title|escapejs }}', poster: '{{ episode.hero_poster|media_url|escapejs }}' })"
                 class="block w-full overflow-hidden rounded-lg border border-white/10 bg-[#111111] text-left transition-colors duration-300 hover:border-[#f5c518]/45 focus:outline-none focus-visible:border-[#f5c518]"
             >
             {% else %}
